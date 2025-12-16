@@ -5,6 +5,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const authRoutes = require('./routes/authRoutes');
 
+const inventoryRoutes = require('./routes/inventoryRoutes');
 const app = express();
 
 
@@ -20,6 +21,8 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+
+app.use('/api/inventory', inventoryRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
