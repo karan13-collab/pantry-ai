@@ -1,32 +1,39 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+
+// Import the Logic (Auth Context)
+import { AuthProvider } from './context/AuthContext';
+
+// Import the Pages we just built
+import Login from './components/auth/Login';
+import Register from './components/auth/Register';
+
+// A simple Dashboard placeholder (We will build the real one later)
+const Dashboard = () => (
+  <div className="min-h-screen flex items-center justify-center bg-green-50">
+    <div className="text-center p-10 bg-white shadow-lg rounded-xl">
+      <h1 className="text-4xl font-bold text-green-600 mb-4">🎉 Success!</h1>
+      <p className="text-xl text-gray-700">You have successfully logged in.</p>
+      <p className="text-gray-500 mt-2">Welcome to the Dashboard.</p>
+    </div>
+  </div>
+);
 
 function App() {
   return (
-    <Router>
-      <div className="min-h-screen bg-gray-100 text-gray-900 font-sans">
-        
-        {/* Temporary Navigation Bar (So we can test) */}
-        <nav className="p-4 bg-white shadow-md flex justify-between">
-          <h1 className="text-xl font-bold text-green-600">PantryAI</h1>
-          <div className="space-x-4">
-            <Link to="/" className="hover:text-green-600">Home</Link>
-            <Link to="/login" className="hover:text-green-600">Login</Link>
-            <Link to="/dashboard" className="hover:text-green-600">Dashboard</Link>
-          </div>
-        </nav>
-
-        {/* This is where the pages will switch */}
-        <div className="p-10">
+    // 1. Wrap the app in AuthProvider so every page knows if user is logged in
+    <AuthProvider>
+      <Router>
+        <div className="min-h-screen bg-gray-100">
           <Routes>
-            <Route path="/" element={<h2 className="text-3xl font-bold">🏠 Welcome to the Home Page</h2>} />
-            <Route path="/login" element={<h2 className="text-3xl font-bold text-blue-600">🔑 Login Page (Coming Soon)</h2>} />
-            <Route path="/dashboard" element={<h2 className="text-3xl font-bold text-purple-600">📊 User Dashboard (Coming Soon)</h2>} />
+            {/* 2. Define the URLs */}
+            <Route path="/" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/dashboard" element={<Dashboard />} />
           </Routes>
         </div>
-
-      </div>
-    </Router>
+      </Router>
+    </AuthProvider>
   );
 }
 
