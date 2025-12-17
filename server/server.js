@@ -6,13 +6,15 @@ const helmet = require('helmet');
 const authRoutes = require('./routes/authRoutes');
 
 const inventoryRoutes = require('./routes/inventoryRoutes');
+const householdRoutes = require('./routes/householdRoutes');
+
 const app = express();
 
 
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
-
+app.use('/api/householdRoutes', householdRoutes);
 const connectDB=require('./config/db');
 connectDB();
 
