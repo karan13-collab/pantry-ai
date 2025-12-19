@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
-import { AuthContext } from '../../context/AuthContext';
+import { AuthContext } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
-
+import api from '../services/api';
 const Register = () => {
   const { register } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -38,12 +38,12 @@ const Register = () => {
         {error && <div className="bg-red-100 text-red-700 p-2 mb-4 rounded">{error}</div>}
         
         <form onSubmit={onSubmit} className="space-y-4">
-          {/* Basic Info */}
+   
           <input type="text" name="username" placeholder="Username" onChange={onChange} className="w-full p-2 border rounded" required />
           <input type="email" name="email" placeholder="Email" onChange={onChange} className="w-full p-2 border rounded" required />
           <input type="password" name="password" placeholder="Password" onChange={onChange} className="w-full p-2 border rounded" required />
           
-          {/* Health Stats */}
+       
           <div className="grid grid-cols-2 gap-4">
             <input type="number" name="age" placeholder="Age" onChange={onChange} className="w-full p-2 border rounded" required />
             <select name="gender" onChange={onChange} className="w-full p-2 border rounded">

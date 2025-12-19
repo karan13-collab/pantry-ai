@@ -29,7 +29,7 @@ const InventorySchema = new mongoose.Schema({
   household: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Household',
-    required: true
+    required: false
   },
   addedBy: {
     type: mongoose.Schema.Types.ObjectId,
