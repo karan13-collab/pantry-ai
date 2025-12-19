@@ -1,11 +1,20 @@
 const express = require('express');
 const router = express.Router();
-const { getInventory, addItem } = require('../controllers/inventoryController');
+const { 
+  getInventory, 
+  addItem, 
+  deleteItem, 
+  generateRecipe 
+} = require('../controllers/inventoryController');
 
-// We will add the Auth Middleware here later to protect these routes
-// router.use(require('../middleware/authMiddleware')); 
 
-router.get('/', getInventory);   // GET /api/inventory -> Fetch items
-router.post('/', addItem);       // POST /api/inventory -> Add item
+// const { protect } = require('../middleware/authMiddleware');
+// router.use(protect); 
+
+router.get('/', getInventory);      
+router.post('/', addItem);          
+
+router.delete('/:id', deleteItem);               
+router.post('/generate-recipe', generateRecipe); 
 
 module.exports = router;
