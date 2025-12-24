@@ -1,20 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { 
-  getInventory, 
-  addItem, 
-  deleteItem, 
-  generateRecipe 
-} = require('../controllers/inventoryController');
+const { getInventory, addItem, deleteItem, generateRecipe } = require('../controllers/inventoryController');
 
 
-// const { protect } = require('../middleware/authMiddleware');
-// router.use(protect); 
+const auth = require('../middleware/authMiddleware'); 
 
-router.get('/', getInventory);      
-router.post('/', addItem);          
 
-router.delete('/:id', deleteItem);               
-router.post('/generate-recipe', generateRecipe); 
+router.get('/', auth, getInventory);
+router.post('/', auth, addItem);  
+router.delete('/:id', auth, deleteItem);
+router.post('/generate-recipe', auth, generateRecipe);
 
 module.exports = router;

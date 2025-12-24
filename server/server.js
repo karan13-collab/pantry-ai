@@ -13,7 +13,9 @@ const app = express();
 
 // Middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors({origin: 'http://localhost:3000', // Or whatever port your frontend uses
+  credentials: true}));
+app.use('/api/shopping-lists', require('./routes/shoppingRoutes'));
 
 // Connect to Database
 connectDB();
