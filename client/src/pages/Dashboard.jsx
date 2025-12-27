@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, AlertCircle, LogOut, Package, Search, ChefHat, Loader, Clock, BarChart, Flame, Beef, Wheat, Droplet, Leaf, Heart, ShoppingCart, X } from 'lucide-react';
+import { Plus, Trash2, AlertCircle, LogOut, Package, Search, ChefHat, Leaf, Heart, ShoppingCart, X, Copy, Check } from 'lucide-react';
 import api from '../services/api';
 
 const Dashboard = () => {
@@ -9,15 +9,29 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   
   // Recipe & UI State
-  const [recipe, setRecipe] = useState(null);
-  const [generating, setGenerating] = useState(false);
-  const [aiError, setAiError] = useState(null);
   const [showStrategyModal, setShowStrategyModal] = useState(false); 
-
   const [newItem, setNewItem] = useState({ 
     name: '', quantity: 1, unit: 'pcs', expiryDate: '', category: 'Other' 
   });
   const [searchTerm, setSearchTerm] = useState('');
+
+  // UI State for Copying Code
+  const [copied, setCopied] = useState(false);
+
+  // --- HELPER: Extract JOIN CODE from Token ---
+  const getJoinCode = () => {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+    try {
+      // Decode the JWT token payload securely
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.user.joinCode; // <--- READING THE JOIN CODE NOW
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const joinCode = getJoinCode();
 
   // --- Fetch Data ---
   const fetchInventory = async () => {
@@ -29,21 +43,14 @@ const Dashboard = () => {
   };
   useEffect(() => { fetchInventory(); }, []);
 
-  // --- 1. OPEN MODAL ---
-  const handleOpenChef = () => {
-    setRecipe(null);
-    setAiError(null);
-    setShowStrategyModal(true);
-  };
+  // --- Actions ---
+  const handleOpenChef = () => setShowStrategyModal(true);
 
-  // --- 2. CALL API WITH STRATEGY ---
   const handleGenerateRecipe = async (strategy) => {
     setShowStrategyModal(false); 
-    // Redirect to the new page with the chosen strategy
     navigate('/recipe-suggestion', { state: { strategy } });
   };
 
-  // --- CRUD Actions ---
   const handleAddItem = async (e) => {
     e.preventDefault(); 
     try {
@@ -53,12 +60,23 @@ const Dashboard = () => {
       setNewItem({ name: '', quantity: 1, unit: 'pcs', expiryDate: '', category: 'Other' });
     } catch (err) { alert("Failed to add item"); }
   };
+
   const handleDeleteItem = async (id) => {
     if (!window.confirm("Remove item?")) return;
     try { await api.delete(`/inventory/${id}`); setItems(items.filter((item) => item._id !== id)); } catch (err) {}
   };
+
   const handleLogout = () => { localStorage.removeItem('token'); navigate('/'); };
   
+  // --- COPY FUNCTION ---
+  const copyToClipboard = () => {
+    if (joinCode) {
+      navigator.clipboard.writeText(joinCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
   // Helpers
   const getExpiryStatus = (dateString) => {
     const today = new Date();
@@ -84,26 +102,14 @@ const Dashboard = () => {
             <p className="text-gray-500 mb-6 text-sm">How should we prioritize your ingredients today?</p>
             
             <div className="grid gap-4">
-              <button 
-                onClick={() => handleGenerateRecipe('waste')}
-                className="flex items-center gap-4 p-4 rounded-xl border-2 border-green-100 hover:border-green-500 hover:bg-green-50 transition-all group text-left"
-              >
+              <button onClick={() => handleGenerateRecipe('waste')} className="flex items-center gap-4 p-4 rounded-xl border-2 border-green-100 hover:border-green-500 hover:bg-green-50 transition-all group text-left">
                 <div className="bg-green-100 p-3 rounded-full text-green-600 group-hover:bg-green-200"><Leaf className="w-6 h-6"/></div>
-                <div>
-                  <div className="font-bold text-gray-800">Maximize Fridge</div>
-                  <div className="text-xs text-gray-500">Prioritize using up expiring food.</div>
-                </div>
+                <div><div className="font-bold text-gray-800">Maximize Fridge</div><div className="text-xs text-gray-500">Prioritize using up expiring food.</div></div>
               </button>
 
-              <button 
-                onClick={() => handleGenerateRecipe('health')}
-                className="flex items-center gap-4 p-4 rounded-xl border-2 border-blue-100 hover:border-blue-500 hover:bg-blue-50 transition-all group text-left"
-              >
+              <button onClick={() => handleGenerateRecipe('health')} className="flex items-center gap-4 p-4 rounded-xl border-2 border-blue-100 hover:border-blue-500 hover:bg-blue-50 transition-all group text-left">
                 <div className="bg-blue-100 p-3 rounded-full text-blue-600 group-hover:bg-blue-200"><Heart className="w-6 h-6"/></div>
-                <div>
-                  <div className="font-bold text-gray-800">Maximize Health</div>
-                  <div className="text-xs text-gray-500">Strict macros and calorie limits.</div>
-                </div>
+                <div><div className="font-bold text-gray-800">Maximize Health</div><div className="text-xs text-gray-500">Strict macros and calorie limits.</div></div>
               </button>
             </div>
           </div>
@@ -114,32 +120,36 @@ const Dashboard = () => {
       <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-40 shadow-sm border-b border-green-100">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex justify-between items-center">
           
-          {/* Logo */}
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
             <Package className="h-6 w-6 text-green-600" />
             <span className="text-2xl font-extrabold text-green-700">PantryAI</span>
           </div>
 
-          {/* Right Side Buttons */}
           <div className="flex items-center gap-3">
+
+            {/* 👇 UPDATED: Display JOIN CODE here instead of ID 👇 */}
+            {joinCode && (
+              <div className="hidden md:flex flex-col items-end mr-2">
+                <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Join Code</span>
+                <button 
+                  onClick={copyToClipboard}
+                  className="flex items-center gap-2 bg-gray-50 hover:bg-green-50 text-gray-800 hover:text-green-700 px-3 py-1 rounded border border-gray-200 transition-all text-sm font-mono font-bold tracking-widest"
+                  title="Click to Copy"
+                >
+                  {joinCode}
+                  {copied ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
+                </button>
+              </div>
+            )}
             
-            {/* 👇 NEW SHOPPING LIST BUTTON 👇 */}
-            <button 
-              onClick={() => navigate('/shopping-list')}
-              className="flex items-center gap-2 text-gray-600 hover:text-green-600 font-semibold px-4 py-2 rounded-full hover:bg-green-50 transition-all text-sm border border-transparent hover:border-green-100"
-            >
-              <ShoppingCart className="w-4 h-4" /> 
-              <span className="hidden md:inline">Shopping List</span>
+            <button onClick={() => navigate('/shopping-list')} className="flex items-center gap-2 text-gray-600 hover:text-green-600 font-semibold px-4 py-2 rounded-full hover:bg-green-50 transition-all text-sm border border-transparent hover:border-green-100">
+              <ShoppingCart className="w-4 h-4" /> <span className="hidden md:inline">Shopping List</span>
             </button>
 
             <div className="h-6 w-px bg-gray-200 mx-1"></div>
 
-            <button 
-              onClick={handleLogout} 
-              className="flex items-center gap-2 text-gray-500 hover:text-red-600 text-sm font-semibold hover:bg-red-50 px-4 py-2 rounded-full transition-all"
-            >
-              <LogOut className="w-4 h-4" /> 
-              <span className="hidden md:inline">Sign Out</span>
+            <button onClick={handleLogout} className="flex items-center gap-2 text-gray-500 hover:text-red-600 text-sm font-semibold hover:bg-red-50 px-4 py-2 rounded-full transition-all">
+              <LogOut className="w-4 h-4" /> <span className="hidden md:inline">Sign Out</span>
             </button>
           </div>
 

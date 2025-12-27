@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const { registerUser, loginUser } = require('../controllers/authController');
 
+// 👇 CHECK THIS LINE: It must use { } to match 'exports.register'
+const { register, login } = require('../controllers/authController');
 
-router.post('/register', registerUser);
-router.post('/login', loginUser);
+// Routes
+router.post('/register', register); // If 'register' is undefined, this line crashes
+router.post('/login', login);
 
 module.exports = router;
