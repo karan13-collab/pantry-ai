@@ -12,11 +12,11 @@ const getInventory = async (req, res) => {
     }
 
     // 🔒 PRIVACY FIX: 
-    // We filter by Household AND 'addedBy'.
+    // Filter by Household AND 'addedBy'.
     // This ensures I only see items *I* personally added.
     const query = { 
       household: req.user.household,
-      addedBy: req.user.id  // <--- THE KEY FIX
+      addedBy: req.user.id 
     };
 
     // --- AUTO-DELETE LOGIC ---
@@ -29,7 +29,7 @@ const getInventory = async (req, res) => {
     });
 
     if (cleanupResult.deletedCount > 0) {
-      console.log(`🧹 Auto-Cleanup: Removed ${cleanupResult.deletedCount} items for user ${req.user.username}.`);
+      console.log(`🧹 Auto-Cleanup: Removed ${cleanupResult.deletedCount} items.`);
     }
 
     // --- FETCH ITEMS ---
@@ -42,6 +42,7 @@ const getInventory = async (req, res) => {
   }
 };
 
+// --- 2. ADD ITEM ---
 const addItem = async (req, res) => {
   try {
     if (!req.user || !req.user.id) {
@@ -64,7 +65,7 @@ const addItem = async (req, res) => {
       expiryDate, 
       category: category || 'Other',
       household: householdId, 
-      addedBy: req.user.id // We stamp the item with your ID here
+      addedBy: req.user.id // Stamp with owner ID
     });
 
     console.log("✅ Item Created:", newItem._id);
@@ -76,13 +77,13 @@ const addItem = async (req, res) => {
   }
 };
 
+// --- 3. DELETE ITEM ---
 const deleteItem = async (req, res) => {
   try {
     const item = await InventoryItem.findById(req.params.id);
     if (!item) return res.status(404).json({ message: 'Item not found' });
 
     // 🔒 OWNERSHIP CHECK:
-    // Ensure the user trying to delete it is the one who added it.
     if (item.addedBy.toString() !== req.user.id) {
       return res.status(403).json({ message: "Not authorized to delete this item." });
     }
@@ -92,6 +93,7 @@ const deleteItem = async (req, res) => {
   } catch (error) { res.status(500).json({ message: error.message }); }
 };
 
+// --- 4. GENERATE RECIPE (AI) ---
 const generateRecipe = async (req, res) => {
   try {
     const { strategy } = req.body; 
@@ -115,8 +117,7 @@ const generateRecipe = async (req, res) => {
     const targetCalories = Math.round((bmr * multiplier) * 0.35); 
     const targetProtein = Math.round((userProfile.weight * 1.2) / 3);
 
-    // 3. FETCH *YOUR* INVENTORY ONLY
-    // 🔒 PRIVACY FIX: Only use ingredients the user personally owns
+    // 3. FETCH YOUR INVENTORY ONLY
     const inventory = await InventoryItem.find({ 
       household: req.user.household,
       addedBy: req.user.id 
@@ -127,12 +128,10 @@ const generateRecipe = async (req, res) => {
     const expiringIngredients = inventory.slice(0, 15).map(item => item.name).join(',+');
     const apiKey = process.env.SPOONACULAR_API_KEY;
 
-    // ... (Rest of the Spoonacular Logic remains identical) ...
-    
     let apiParams = {
       apiKey, 
       includeIngredients: expiringIngredients, 
-      number: 1,
+      number: 5, // 🎲 Get 5 options
       addRecipeNutrition: true, 
       fillIngredients: true, 
       instructionsRequired: true,
@@ -158,8 +157,14 @@ const generateRecipe = async (req, res) => {
       return res.status(404).json({ error: "No recipes found. Try adding more items." });
     }
 
-    const recipe = response.data.results[0];
-    // ... (Formatting helper functions remain same) ...
+    // 🎲 RANDOM PICKER
+    const results = response.data.results;
+    const randomIndex = Math.floor(Math.random() * results.length);
+    const recipe = results[randomIndex];
+
+    console.log(`🎲 Selected Recipe: ${recipe.title}`);
+
+    // ... Formatting ...
     const getNutrient = (name) => {
       const n = recipe.nutrition?.nutrients?.find(n => n.name === name);
       return n ? `${Math.round(n.amount)}${n.unit}` : "N/A";
@@ -200,4 +205,5 @@ const generateRecipe = async (req, res) => {
   }
 };
 
+// 👇 EXPORTS (Must include ALL functions)
 module.exports = { getInventory, addItem, deleteItem, generateRecipe };
