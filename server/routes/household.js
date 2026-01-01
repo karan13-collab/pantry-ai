@@ -1,11 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
+const auth = require('../middleware/authMiddleware');
 const Household = require('../models/Household'); // Imports your Schema
 const verifyToken = require('../middleware/authMiddleware');
+const householdController = require('../controllers/householdController');
 
 // PUT /api/household/rename
 // Rename the logged-in user's household
+
+router.get('/current', auth, householdController.getCurrentHousehold);
+
+console.log('Auth is:', auth);
+console.log('Controller Function is:', householdController.getCurrentHousehold);
 router.put('/rename', verifyToken, async (req, res) => {
   const { name } = req.body;
 
@@ -30,7 +37,7 @@ router.put('/rename', verifyToken, async (req, res) => {
     // 3. Security Check: Only allow the Admin to rename
     // We compare the ID strings to be safe
 
-    
+
     // if (household.admin.toString() !== req.user.id) {
     //   return res.status(403).json({ msg: 'Only the Household Admin can rename this.' });
     // }

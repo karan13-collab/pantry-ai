@@ -6,7 +6,7 @@ const connectDB = require('./config/db'); // Uses your config file
 // Import Routes
 const authRoutes = require('./routes/authRoutes');
 const inventoryRoutes = require('./routes/inventoryRoutes');
-const householdRoutes = require('./routes/householdRoutes');
+const householdRoutes = require('./routes/household');
 
 
 

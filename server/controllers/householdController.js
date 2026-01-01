@@ -1,11 +1,12 @@
-const Household = require('../models/Household');
-const User = require('../models/User');
+const Household = require("../models/Household");
+const User = require("../models/User");
 
 // --- HELPER: Same 6-char code generator as Auth ---
 const generateJoinCode = () => {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 };
 
+// 1. Create Household
 exports.createHousehold = async (req, res) => {
   try {
     const { name } = req.body;
@@ -14,64 +15,81 @@ exports.createHousehold = async (req, res) => {
       return res.status(400).json({ msg: "Household name is required" });
     }
 
-    // 1. Generate unique code
+    // Generate unique code
     const joinCode = generateJoinCode();
 
-    // 2. Create Household
-    // Note: We can use req.user.id here because the user is ALREADY logged in!
+    // Create Household
     const household = new Household({
       name,
       joinCode,
-      admin: req.user.id, 
+      admin: req.user.id,
       members: [req.user.id],
-      currency: 'EUR' // Default currency
+      currency: "EUR", 
     });
 
     await household.save();
 
-    // 3. Update the User to link to this new household
+    // Update the User to link to this new household
     await User.findByIdAndUpdate(req.user.id, {
       household: household._id,
-      // role: 'admin' // (Optional: Only if you added 'role' to your User model)
     });
 
     res.json(household);
-
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('Server Error');
+    res.status(500).send("Server Error");
   }
 };
 
+// 2. Get Current Household (NOW SEPARATE AND VISIBLE)
+exports.getCurrentHousehold = async (req, res) => {
+  try {
+    // Look for a household where the 'members' array contains this user's ID
+    const household = await Household.findOne({ members: req.user.id })
+      .populate("members", "name email")
+      .populate("admin", "name");
+
+    if (!household) {
+      return res.status(404).json({ msg: "No household found for this user" });
+    }
+
+    res.json(household);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server Error");
+  }
+};
+
+// 3. Join Household
 exports.joinHousehold = async (req, res) => {
   try {
     const { joinCode } = req.body;
 
-    // 1. Find by Code
-    const household = await Household.findOne({ joinCode: joinCode.toUpperCase() });
+    // Find by Code
+    const household = await Household.findOne({
+      joinCode: joinCode.toUpperCase(),
+    });
     if (!household) {
-      return res.status(404).json({ msg: 'Invalid Join Code' });
+      return res.status(404).json({ msg: "Invalid Join Code" });
     }
 
-    // 2. Check if already a member
+    // Check if already a member
     if (household.members.includes(req.user.id)) {
-      return res.status(400).json({ msg: 'You are already in this household' });
+      return res.status(400).json({ msg: "You are already in this household" });
     }
 
-    // 3. Add to Members list
+    // Add to Members list
     household.members.push(req.user.id);
     await household.save();
 
-    // 4. Update User link
+    // Update User link
     await User.findByIdAndUpdate(req.user.id, {
       household: household._id,
-      // role: 'member' // (Optional)
     });
 
     res.json(household);
-
   } catch (err) {
     console.error(err.message);
-    res.status(500).send('Server Error');
+    res.status(500).send("Server Error");
   }
 };

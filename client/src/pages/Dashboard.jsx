@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-// Added 'User' to imports 👇
 import {
   Plus,
   Trash2,
@@ -16,20 +15,26 @@ import {
   Copy,
   Check,
   User,
+  Users // Added Users icon for the member count
 } from "lucide-react";
 import api from "../services/api";
-import UserProfile from "../components/userProfile"; // Ensure this matches your file name
+import UserProfile from "../components/userProfile"; 
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  
+  // --- Data State ---
   const [items, setItems] = useState([]);
+  const [household, setHousehold] = useState(null); // Stores Name, Code, Currency, Members
   const [loading, setLoading] = useState(true);
 
-  // --- NEW: Tab State ---
+  // --- UI State ---
   const [activeTab, setActiveTab] = useState("pantry"); // 'pantry' or 'profile'
-
-  // Recipe & UI State
   const [showStrategyModal, setShowStrategyModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  // --- Form State ---
   const [newItem, setNewItem] = useState({
     name: "",
     quantity: 1,
@@ -37,50 +42,35 @@ const Dashboard = () => {
     expiryDate: "",
     category: "Other",
   });
-  const [searchTerm, setSearchTerm] = useState("");
-  const [householdName, setHouseholdName] = useState('My');
-  // UI State for Copying Code
-  const [copied, setCopied] = useState(false);
 
-  // --- HELPER: Extract JOIN CODE from Token ---
-  const getJoinCode = () => {
-    const token = localStorage.getItem("token");
-    if (!token) return null;
-    try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      return payload.user.joinCode;
-    } catch (e) {
-      return null;
-    }
-  };
-
-  const joinCode = getJoinCode();
-
-  // --- Fetch Data ---
-  // --- Fetch Data ---
-  const fetchInventory = async () => {
-    try {
-      // 1. Get Inventory Items
-      const res = await api.get('/inventory');
-      setItems(res.data);
-
-      // 2. Get User Profile (To find the Household Name)
-      // This part was probably missing or incomplete in your code
+  // --- Fetch Data (Inventory + Household) ---
+  useEffect(() => {
+    const fetchData = async () => {
       try {
-        const resUser = await api.get('/user/profile');
-        if (resUser.data.household) {
-          setHouseholdName(resUser.data.household.name);
-        }
-      } catch (e) {
-        // If profile fails, just keep default 'My'
-        console.log("Could not fetch household name");
-      }
+        // 1. Fetch Inventory Items
+        const resInventory = await api.get('/inventory');
+        setItems(resInventory.data);
 
-      setLoading(false);
-    } catch (err) { 
-      setLoading(false); 
-    }
-  };
+        // 2. Fetch Household Details (Name, JoinCode, etc.)
+        // Ensure your backend has this route, or use /user/profile if household is nested there
+        try {
+          const resHousehold = await api.get('/household/current'); 
+          setHousehold(resHousehold.data);
+        } catch (hErr) {
+          console.error("Failed to load household data", hErr);
+          // Fallback if API fails
+          setHousehold({ name: 'My', joinCode: '----', currency: 'EUR' }); 
+        }
+
+        setLoading(false);
+      } catch (err) { 
+        console.error("Dashboard Load Error", err);
+        setLoading(false); 
+      }
+    };
+
+    fetchData();
+  }, []);
 
   // --- Actions ---
   const handleOpenChef = () => setShowStrategyModal(true);
@@ -122,8 +112,8 @@ const Dashboard = () => {
   };
 
   const copyToClipboard = () => {
-    if (joinCode) {
-      navigator.clipboard.writeText(joinCode);
+    if (household?.joinCode) {
+      navigator.clipboard.writeText(household.joinCode);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -155,7 +145,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-100 font-sans text-gray-800 relative">
-      {/* STRATEGY MODAL (Unchanged) */}
+      {/* STRATEGY MODAL */}
       {showStrategyModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all scale-100">
@@ -221,17 +211,18 @@ const Dashboard = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            {joinCode && (
+            {/* DYNAMIC JOIN CODE SECTION */}
+            {household?.joinCode && (
               <div className="hidden md:flex flex-col items-end mr-2">
                 <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">
-                  Join Code
+                  {household.name}'s Join Code
                 </span>
                 <button
                   onClick={copyToClipboard}
                   className="flex items-center gap-2 bg-gray-50 hover:bg-green-50 text-gray-800 hover:text-green-700 px-3 py-1 rounded border border-gray-200 transition-all text-sm font-mono font-bold tracking-widest"
                   title="Click to Copy"
                 >
-                  {joinCode}
+                  {household.joinCode}
                   {copied ? (
                     <Check className="w-3 h-3 text-green-500" />
                   ) : (
@@ -263,7 +254,7 @@ const Dashboard = () => {
       </nav>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* --- NEW: TAB NAVIGATION --- */}
+        {/* --- TAB NAVIGATION --- */}
         <div className="flex justify-center mb-8">
           <div className="bg-white p-1 rounded-xl shadow-sm border border-gray-200 inline-flex">
             <button
@@ -292,11 +283,20 @@ const Dashboard = () => {
         {/* --- VIEW 1: PANTRY INVENTORY --- */}
         {activeTab === "pantry" && (
           <div className="animate-fade-in">
+            {/* DYNAMIC HEADER */}
             <div className="mb-8 md:flex md:items-center md:justify-between">
-              <h2 className="text-3xl font-bold text-gray-800 flex items-center gap-2">
-                {householdName === "PantryAI" ? "Your" : householdName}{" "}
-                Inventory
-              </h2>
+              <div>
+                <h2 className="text-3xl font-bold text-gray-800 flex items-center gap-2">
+                  {/* Shows "Aman's Inventory" or "My Inventory" based on DB */}
+                  {household ? household.name : 'My'} Inventory
+                </h2>
+                {household?.members && (
+                    <p className="text-sm text-gray-500 flex items-center gap-1 mt-1">
+                        <Users className="w-4 h-4"/> Shared with {household.members.length} members
+                    </p>
+                )}
+              </div>
+              
               <div className="relative mt-4 md:mt-0">
                 <Search className="w-5 h-5 absolute left-3 top-2.5 text-gray-400" />
                 <input
