@@ -9,6 +9,7 @@ const inventoryRoutes = require('./routes/inventoryRoutes');
 const householdRoutes = require('./routes/householdRoutes');
 
 
+
 // Initialize App
 const app = express();
 
@@ -27,6 +28,7 @@ app.use('/api/auth', authRoutes);           // Points to routes/authRoutes.js
 app.use('/api/inventory', inventoryRoutes); // Points to routes/inventoryRoutes.js
 app.use('/api/household', householdRoutes); 
 app.use('/api/user', require('./routes/user'))// Points to routes/householdRoutes.js
+app.use('/api/household', require('./routes/household'));
 
 // Root Route (Health Check)
 app.get('/', (req, res) => {

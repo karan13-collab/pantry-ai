@@ -10,8 +10,10 @@ const verifyToken = require('../middleware/authMiddleware'); // Your JWT middlew
 router.get('/profile', verifyToken, async (req, res) => {
     try {
       // 1. Get current user
-      const user = await User.findById(req.user.id).select('-password');
-  
+      const user = await User.findById(req.user.id)
+      .select('-password')
+      .populate('household', 'name joinCode');
+      
       if (!user) {
         return res.status(404).json({ msg: 'User not found' });
       }
@@ -28,6 +30,34 @@ router.get('/profile', verifyToken, async (req, res) => {
       // We mix the user object with the new 'members' list
       res.json({ ...user.toObject(), members: householdMembers });
       
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).send('Server Error');
+    }
+  });
+
+  // PUT /api/user/profile - Update user stats
+router.put('/profile', verifyToken, async (req, res) => {
+    const { weight, height, age, activityLevel, dietaryPreferences, allergies } = req.body;
+  
+    // Build the object to update
+    const userFields = {};
+    if (weight) userFields.weight = weight;
+    if (height) userFields.height = height;
+    if (age) userFields.age = age;
+    if (activityLevel) userFields.activityLevel = activityLevel;
+    if (dietaryPreferences) userFields.dietaryPreferences = dietaryPreferences;
+    if (allergies) userFields.allergies = allergies;
+  
+    try {
+      // Find user by ID (from the token) and update
+      let user = await User.findByIdAndUpdate(
+        req.user.id,
+        { $set: userFields },
+        { new: true } // Returns the updated document
+      ).select('-password');
+  
+      res.json(user);
     } catch (err) {
       console.error(err.message);
       res.status(500).send('Server Error');
