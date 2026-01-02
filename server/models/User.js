@@ -10,6 +10,9 @@ const UserSchema = new mongoose.Schema({
   gender: { type: String, required: true },
   workoutDays: { type: Number, required: true, default: 0 }, 
   activityLevel: { type: String, default: 'sedentary' },
+  
+  dietaryPreferences: { type: String, default: 'None' },
+
   allergies: [{ type: String }],  
   
   household: { type: mongoose.Schema.Types.ObjectId, ref: 'Household' },
