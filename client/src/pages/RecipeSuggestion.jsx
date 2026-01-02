@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Clock, BarChart, ShoppingCart, Plus, Loader, Leaf, Heart, X } from 'lucide-react';
+import { ArrowLeft, Clock, BarChart, ShoppingCart, Plus, Loader, Leaf, Heart, X, Check } from 'lucide-react'; // Added 'Check' icon
 import api from '../services/api';
 
 const RecipeSuggestion = () => {
@@ -17,7 +17,7 @@ const RecipeSuggestion = () => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [userLists, setUserLists] = useState([]);
   const [newListName, setNewListName] = useState('');
-  const [addingToList, setAddingToList] = useState(false); // Loading state for adding
+  const [addingToList, setAddingToList] = useState(false);
 
   // 1. Generate Recipe
   useEffect(() => {
@@ -34,20 +34,17 @@ const RecipeSuggestion = () => {
     fetchRecipe();
   }, [strategy]);
 
-  // 2. Open Modal (ROBUST VERSION)
+  // 2. Open Modal
   const openAddModal = async (item) => {
     setSelectedItem(item);
-    setNewListName(''); // Reset input
-    
-    // Attempt to fetch lists, but open modal regardless of success/failure
+    setNewListName(''); 
     try {
       const res = await api.get('/shopping-lists');
       setUserLists(res.data);
     } catch (err) {
-      console.warn("Could not fetch lists (maybe none exist yet)", err);
-      setUserLists([]); // Default to empty
+      setUserLists([]); 
     } finally {
-      setModalOpen(true); // <--- THIS GUARANTEES THE POPUP OPENS
+      setModalOpen(true); 
     }
   };
 
@@ -70,13 +67,9 @@ const RecipeSuggestion = () => {
     if (!newListName) return;
     setAddingToList(true);
     try {
-      // Step A: Create List
       const res = await api.post('/shopping-lists', { name: newListName });
       const newListId = res.data._id;
-      
-      // Step B: Add Item to it
       await api.post(`/shopping-lists/${newListId}/items`, selectedItem);
-      
       alert(`✅ Created "${newListName}" and added item!`);
       setModalOpen(false);
     } catch (err) {
@@ -133,7 +126,7 @@ const RecipeSuggestion = () => {
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 -mt-8 relative z-10 grid md:grid-cols-3 gap-8">
+      <div className="max-w-6xl mx-auto px-4 -mt-8 relative z-10 grid md:grid-cols-3 gap-8">
         
         {/* LEFT COLUMN: INSTRUCTIONS & MACROS */}
         <div className="md:col-span-2 space-y-8">
@@ -157,41 +150,67 @@ const RecipeSuggestion = () => {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: SHOPPING LIST */}
+        {/* RIGHT COLUMN: INGREDIENTS & SHOPPING */}
         <div className="md:col-span-1">
-          <div className="bg-white p-6 rounded-2xl shadow-lg border border-green-100 sticky top-6">
-            <h3 className="text-lg font-bold text-gray-800 mb-1 flex items-center gap-2">
-              <ShoppingCart className="w-5 h-5 text-green-600" /> Shop Missing Items
+          <div className="bg-white p-6 rounded-2xl shadow-lg border border-green-100 sticky top-6 max-h-[calc(100vh-2rem)] overflow-y-auto custom-scrollbar">
+            
+            {/* 1. FROM YOUR PANTRY (NEW SECTION) */}
+            <h3 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
+              <Check className="w-5 h-5 text-green-600" /> From Your Pantry
             </h3>
-            <p className="text-xs text-gray-500 mb-6">Click + to add to your list.</p>
-
-            <div className="space-y-3">
-              {recipe.shoppingList && recipe.shoppingList.length > 0 ? (
-                recipe.shoppingList.map((item, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 group hover:border-green-200 transition-all">
-                    <div className="flex items-center gap-3">
-                      <img src={item.image} alt={item.name} className="w-10 h-10 rounded-lg object-cover bg-white" />
-                      <div>
+            
+            <div className="space-y-3 mb-8">
+              {recipe.usedIngredients && recipe.usedIngredients.length > 0 ? (
+                recipe.usedIngredients.map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-3 p-2 rounded-xl bg-green-50 border border-green-100 opacity-90">
+                     {/* Used ingredients usually have images, but fallbacks are good */}
+                     <img src={item.image} alt={item.name} className="w-10 h-10 rounded-lg object-cover mix-blend-multiply" />
+                     <div className="flex-1">
                         <div className="font-bold text-sm text-gray-800 capitalize">{item.name}</div>
-                        <div className="text-xs text-gray-500">{item.amount} {item.unit}</div>
-                      </div>
-                    </div>
-                    <button 
-                      onClick={() => openAddModal(item)}
-                      className="bg-white border border-gray-200 text-green-600 p-2 rounded-lg hover:bg-green-600 hover:text-white transition-all shadow-sm"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
+                        <div className="text-xs text-green-700 font-bold">{item.amount} {item.unit}</div>
+                     </div>
+                     <div className="bg-white p-1.5 rounded-full text-green-600 shadow-sm">
+                       <Check className="w-3 h-3" />
+                     </div>
                   </div>
                 ))
               ) : (
-                <div className="text-sm text-gray-400 italic">No missing ingredients!</div>
+                <div className="text-sm text-gray-400 italic">No pantry items used.</div>
               )}
             </div>
-            
-            <div className="mt-6 bg-blue-50 p-4 rounded-xl border border-blue-100 text-center">
-              <p className="text-sm text-blue-800 font-medium">You have {recipe.usedIngredientCount} ingredients ready!</p>
+
+            {/* 2. MISSING ITEMS / SHOPPING LIST */}
+            <div className="border-t border-gray-100 pt-6">
+              <h3 className="text-lg font-bold text-gray-800 mb-1 flex items-center gap-2">
+                <ShoppingCart className="w-5 h-5 text-orange-500" /> To Buy / Missing
+              </h3>
+              <p className="text-xs text-gray-500 mb-4">Click + to add to your list.</p>
+
+              <div className="space-y-3">
+                {recipe.shoppingList && recipe.shoppingList.length > 0 ? (
+                  recipe.shoppingList.map((item, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 group hover:border-orange-200 transition-all">
+                      <div className="flex items-center gap-3">
+                        <img src={item.image} alt={item.name} className="w-10 h-10 rounded-lg object-cover bg-white" />
+                        <div>
+                          <div className="font-bold text-sm text-gray-800 capitalize">{item.name}</div>
+                          <div className="text-xs text-gray-500">{item.amount} {item.unit}</div>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => openAddModal(item)}
+                        className="bg-white border border-gray-200 text-green-600 p-2 rounded-lg hover:bg-green-600 hover:text-white transition-all shadow-sm"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-sm text-gray-400 italic">No missing ingredients!</div>
+                )}
+              </div>
             </div>
+
           </div>
         </div>
       </div>
@@ -208,7 +227,7 @@ const RecipeSuggestion = () => {
             
             {/* Existing Lists */}
             {userLists.length > 0 && (
-              <div className="space-y-2 mb-4 max-h-40 overflow-y-auto">
+              <div className="space-y-2 mb-4 max-h-40 overflow-y-auto custom-scrollbar">
                 <label className="text-xs font-bold text-gray-400 uppercase">Your Lists</label>
                 {userLists.map(list => (
                   <button 
