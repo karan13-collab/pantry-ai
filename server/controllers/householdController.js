@@ -41,6 +41,40 @@ exports.createHousehold = async (req, res) => {
   }
 };
 
+// ... (keep your existing imports and functions)
+
+// 4. Update Household (Only Admin)
+exports.updateHousehold = async (req, res) => {
+  try {
+    const { name } = req.body;
+
+    // Find the household the user belongs to
+    const household = await Household.findOne({ members: req.user.id });
+
+    if (!household) {
+      return res.status(404).json({ msg: "Household not found" });
+    }
+
+    // --- SECURITY CHECK: ONLY ADMIN ---
+    // We must convert ObjectId to string to compare them correctly
+    if (household.admin.toString() !== req.user.id) {
+      return res.status(403).json({ msg: "Not authorized. Only the Admin can rename the household." });
+    }
+
+    // Update fields
+    if (name) household.name = name;
+    
+    // You can add currency updates here too if you want
+    // if (req.body.currency) household.currency = req.body.currency;
+
+    await household.save();
+    res.json(household);
+
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send("Server Error");
+  }
+};
 // 2. Get Current Household (NOW SEPARATE AND VISIBLE)
 exports.getCurrentHousehold = async (req, res) => {
   try {

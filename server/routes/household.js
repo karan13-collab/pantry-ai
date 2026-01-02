@@ -38,9 +38,10 @@ router.put('/rename', verifyToken, async (req, res) => {
     // We compare the ID strings to be safe
 
 
-    // if (household.admin.toString() !== req.user.id) {
-    //   return res.status(403).json({ msg: 'Only the Household Admin can rename this.' });
-    // }
+     if (household.admin.toString() !== req.user.id) {
+       return res.status(403).json({ msg: 'Only the Household Admin can rename this.' });
+     }
+
 
     // 4. Update the Name
     household.name = name;

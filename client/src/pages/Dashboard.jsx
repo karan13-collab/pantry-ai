@@ -34,6 +34,10 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [copied, setCopied] = useState(false);
 
+  const [notification, setNotification] = useState(null); 
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState("");
+
   // --- Form State ---
   const [newItem, setNewItem] = useState({
     name: "",
@@ -72,6 +76,10 @@ const Dashboard = () => {
     fetchData();
   }, []);
 
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 3000);
+  };
   // --- Actions ---
   const handleOpenChef = () => setShowStrategyModal(true);
 
@@ -482,7 +490,7 @@ const Dashboard = () => {
         {/* --- VIEW 2: USER PROFILE --- */}
         {activeTab === "profile" && (
           <div className="animate-fade-in max-w-3xl mx-auto">
-            <UserProfile />
+          <UserProfile showNotification={showNotification} /> 
           </div>
         )}
       </main>
