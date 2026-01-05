@@ -18,28 +18,33 @@ import {
   Users,
   CheckCircle,
   XCircle,
-  Calendar, // Added Calendar icon
-  Tag       // Added Tag icon for category
+  Calendar,
+  Tag,
+  AlertTriangle,
+  Loader
 } from "lucide-react";
 import api from "../services/api";
-import UserProfile from "../components/userProfile"; 
+import UserProfile from "../components/userProfile";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  
-  // --- Data State ---
+
   const [items, setItems] = useState([]);
-  const [household, setHousehold] = useState(null); 
+  const [household, setHousehold] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // --- UI State ---
-  const [activeTab, setActiveTab] = useState("pantry"); 
+  const [activeTab, setActiveTab] = useState("pantry");
   const [showStrategyModal, setShowStrategyModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [copied, setCopied] = useState(false);
-  const [notification, setNotification] = useState(null); 
+  const [notification, setNotification] = useState(null);
 
-  // --- Form State ---
+  const [listModalOpen, setListModalOpen] = useState(false);
+  const [itemToAdd, setItemToAdd] = useState(null);
+  const [userLists, setUserLists] = useState([]);
+  const [newListName, setNewListName] = useState("");
+  const [addingToList, setAddingToList] = useState(false);
+
   const [newItem, setNewItem] = useState({
     name: "",
     quantity: 1,
@@ -48,35 +53,73 @@ const Dashboard = () => {
     category: "Other",
   });
 
-  // --- Fetch Data ---
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const resInventory = await api.get('/inventory');
+        const resInventory = await api.get("/inventory");
         setItems(resInventory.data);
 
         try {
-          const resHousehold = await api.get('/household/current'); 
+          const resHousehold = await api.get("/household/current");
           setHousehold(resHousehold.data);
         } catch (hErr) {
           console.error("Failed to load household data", hErr);
-          setHousehold({ name: 'My', joinCode: '----', currency: 'EUR' }); 
+          setHousehold({ name: "My", joinCode: "----", currency: "EUR" });
         }
         setLoading(false);
-      } catch (err) { 
+      } catch (err) {
         console.error("Dashboard Load Error", err);
-        setLoading(false); 
+        setLoading(false);
       }
     };
     fetchData();
   }, []);
 
-  const showNotification = (message, type = 'success') => {
+  const inventoryTotals = items.reduce((acc, item) => {
+    const key = item.name.trim().toLowerCase();
+    const qty = parseFloat(item.quantity) || 0;
+    acc[key] = (acc[key] || 0) + qty;
+    return acc;
+  }, {});
+
+  const alertItems = items.filter((item) => {
+  
+    const isExpiring = new Date(item.expiryDate) <= new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+
+    const key = item.name.trim().toLowerCase();
+    const totalQty = inventoryTotals[key];
+    const unit = item.unit ? item.unit.toLowerCase() : 'pcs';
+
+    let isGlobalLowStock = false;
+    if (['kg', 'l', 'liters', 'litres'].includes(unit)) {
+       isGlobalLowStock = totalQty < 1; 
+    } else {
+       isGlobalLowStock = totalQty <= 1; 
+    }
+
+    return isGlobalLowStock || isExpiring;
+  }).map((item) => {
+    const isExpiring = new Date(item.expiryDate) <= new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+    
+    const key = item.name.trim().toLowerCase();
+    const totalQty = inventoryTotals[key];
+    const unit = item.unit ? item.unit.toLowerCase() : 'pcs';
+    let isGlobalLowStock = false;
+    if (['kg', 'l', 'liters', 'litres'].includes(unit)) isGlobalLowStock = totalQty < 1;
+    else isGlobalLowStock = totalQty <= 1;
+
+    let reason = "";
+    if (isGlobalLowStock) reason = "Low Stock";
+    if (isExpiring) reason = isGlobalLowStock ? "Low & Expiring" : "Expiring Soon";
+
+    return { ...item, reason };
+  });
+
+  const showNotification = (message, type = "success") => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 3000);
   };
 
-  // --- Actions ---
   const handleOpenChef = () => setShowStrategyModal(true);
 
   const handleGenerateRecipe = async (strategy) => {
@@ -110,7 +153,59 @@ const Dashboard = () => {
       setItems(items.filter((item) => item._id !== id));
       showNotification("Item removed", "success");
     } catch (err) {
-        showNotification("Failed to remove item", "error");
+      showNotification("Failed to remove item", "error");
+    }
+  };
+  const openAddToListModal = async (item) => {
+    setItemToAdd(item);
+    setNewListName("");
+    try {
+      const res = await api.get("/shopping-lists");
+      setUserLists(res.data);
+    } catch (err) {
+      setUserLists([]);
+    }
+    setListModalOpen(true);
+  };
+
+  const handleAddToList = async (listId, listName) => {
+    setAddingToList(true);
+    try {
+      const payload = {
+        name: itemToAdd.name,
+        amount: 1,
+        unit: itemToAdd.unit || "pcs",
+        image: null,
+      };
+      await api.post(`/shopping-lists/${listId}/items`, payload);
+      showNotification(`Added ${itemToAdd.name} to ${listName}`, "success");
+      setListModalOpen(false);
+    } catch (err) {
+      showNotification("Failed to add item", "error");
+    } finally {
+      setAddingToList(false);
+    }
+  };
+
+  const handleCreateAndAdd = async () => {
+    if (!newListName) return;
+    setAddingToList(true);
+    try {
+      const res = await api.post("/shopping-lists", { name: newListName });
+      const newListId = res.data._id;
+      const payload = {
+        name: itemToAdd.name,
+        amount: 1,
+        unit: itemToAdd.unit || "pcs",
+        image: null,
+      };
+      await api.post(`/shopping-lists/${newListId}/items`, payload);
+      showNotification(`Created list & added ${itemToAdd.name}`, "success");
+      setListModalOpen(false);
+    } catch (err) {
+      showNotification("Failed to create list", "error");
+    } finally {
+      setAddingToList(false);
     }
   };
 
@@ -132,8 +227,7 @@ const Dashboard = () => {
     const today = new Date();
     const expiry = new Date(dateString);
     const diffDays = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
-    
-    // Adjusted colors for Black Glass theme
+
     if (diffDays < 0) return { color: "bg-red-500/10 text-red-400 border border-red-500/20", text: "Expired" };
     if (diffDays <= 3) return { color: "bg-orange-500/10 text-orange-400 border border-orange-500/20", text: "Expiring Soon" };
     return { color: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20", text: "Fresh" };
@@ -146,13 +240,11 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen font-sans text-gray-200 relative selection:bg-emerald-500/30">
       
-      {/* --- BACKGROUND LAYER (Black Shine & Food) --- */}
+      {/* --- BACKGROUND LAYER --- */}
       <div className="fixed inset-0 z-0">
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-40"
-          style={{ 
-            backgroundImage: `url('https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1974&auto=format&fit=crop')` 
-          }}
+          style={{ backgroundImage: `url('https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1974&auto=format&fit=crop')` }}
         ></div>
         <div className="absolute inset-0 bg-gradient-to-t from-black via-gray-950/90 to-gray-900/80"></div>
         <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
@@ -195,6 +287,54 @@ const Dashboard = () => {
           </div>
         )}
 
+        {/* --- ADD TO SHOPPING LIST MODAL --- */}
+        {listModalOpen && itemToAdd && (
+          <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
+            <div className="bg-gray-900/80 border border-white/10 rounded-2xl shadow-2xl max-w-sm w-full p-6 relative">
+              <button onClick={() => setListModalOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white"><X className="w-5 h-5"/></button>
+              <h3 className="text-lg font-bold text-white mb-1">Restock Item</h3>
+              <p className="text-sm text-gray-400 mb-4">Add <span className="font-bold text-emerald-400">{itemToAdd.name}</span> to...</p>
+              
+              {userLists.length > 0 && (
+                <div className="space-y-2 mb-4 max-h-40 overflow-y-auto custom-scrollbar">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase">Your Lists</label>
+                  {userLists.map(list => (
+                    <button 
+                      key={list._id}
+                      disabled={addingToList}
+                      onClick={() => handleAddToList(list._id, list.name)}
+                      className="w-full text-left p-3 rounded-lg border border-white/5 bg-white/5 hover:bg-emerald-500/20 hover:border-emerald-500/30 flex justify-between items-center group transition-all"
+                    >
+                      <span className="font-medium text-gray-200">{list.name}</span>
+                      <Plus className="w-4 h-4 text-gray-500 group-hover:text-emerald-400" />
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <div className="border-t border-white/10 pt-4">
+                <label className="text-[10px] font-bold text-gray-500 uppercase mb-2 block">Create New List</label>
+                <div className="flex gap-2">
+                  <input 
+                    type="text" 
+                    placeholder="e.g. Costco" 
+                    className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-emerald-500/50 focus:outline-none"
+                    value={newListName}
+                    onChange={(e) => setNewListName(e.target.value)}
+                  />
+                  <button 
+                    onClick={handleCreateAndAdd}
+                    disabled={!newListName || addingToList}
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 rounded-lg font-bold text-sm disabled:opacity-50 transition-colors"
+                  >
+                    {addingToList ? <Loader className="w-4 h-4 animate-spin"/> : "Create"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* --- NAVBAR --- */}
         <nav className="sticky top-0 z-40 border-b border-white/5 bg-black/40 backdrop-blur-xl">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex justify-between items-center">
@@ -218,7 +358,6 @@ const Dashboard = () => {
                   </button>
                 </div>
               )}
-
               <button onClick={() => navigate("/shopping-list")} className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all" title="Shopping List">
                 <ShoppingCart className="w-5 h-5" />
               </button>
@@ -246,7 +385,37 @@ const Dashboard = () => {
 
           {activeTab === "pantry" && (
             <div className="animate-fade-in space-y-8">
-              
+
+              {/* --- 🚀 NEEDS ATTENTION WIDGET --- */}
+              {alertItems.length > 0 && (
+                <div className="bg-red-500/5 border border-red-500/20 rounded-3xl overflow-hidden backdrop-blur-sm shadow-xl">
+                  <div className="px-6 py-4 border-b border-red-500/10 flex items-center justify-between bg-red-900/20">
+                    <h3 className="text-red-300 font-bold flex items-center gap-2 text-sm uppercase tracking-wide">
+                      <AlertTriangle className="w-4 h-4" /> Needs Attention ({alertItems.length})
+                    </h3>
+                  </div>
+                  <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {alertItems.map((item) => (
+                      <div key={item._id} className="flex items-center justify-between p-3 border border-red-500/20 rounded-xl bg-black/20 hover:bg-red-900/10 transition-all">
+                        <div>
+                          <div className="font-bold text-gray-200">{item.name}</div>
+                          <div className="text-[10px] text-red-400 font-bold uppercase tracking-wide">
+                            {item.reason} ({item.quantity} {item.unit})
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => openAddToListModal(item)}
+                          className="text-red-400 hover:text-white border border-red-500/30 hover:bg-red-500 p-2 rounded-lg transition-all"
+                          title="Add to Shopping List"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* HEADER SECTION */}
               <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
@@ -270,10 +439,9 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              {/* --- IMPROVED QUICK ADD CARD --- */}
+              {/* QUICK ADD CARD */}
               <div className="bg-gray-900/60 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl relative overflow-hidden group">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-transparent opacity-50"></div>
-                
                 <div className="flex items-center gap-3 mb-6 relative z-10">
                   <div className="bg-emerald-500/10 p-2 rounded-lg border border-emerald-500/20">
                     <Plus className="w-5 h-5 text-emerald-400" />
@@ -282,8 +450,6 @@ const Dashboard = () => {
                 </div>
                 
                 <form onSubmit={handleAddItem} className="grid grid-cols-1 md:grid-cols-12 gap-4 relative z-10">
-                  
-                  {/* Item Name */}
                   <div className="md:col-span-4">
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block ml-1">Item Name</label>
                     <input type="text" placeholder="e.g. Fresh Milk" required 
@@ -291,8 +457,6 @@ const Dashboard = () => {
                       value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} 
                     />
                   </div>
-
-                  {/* Quantity & Unit */}
                   <div className="md:col-span-2">
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block ml-1">Qty & Unit</label>
                     <div className="flex gap-2">
@@ -308,37 +472,29 @@ const Dashboard = () => {
                       </select>
                     </div>
                   </div>
-
-                  {/* Category (Improved UI) */}
                   <div className="md:col-span-3">
-                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block ml-1 flex items-center gap-1">
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block ml-1 flex items-center gap-1">
                         <Tag className="w-3 h-3"/> Category
-                     </label>
-                     <div className="relative">
+                      </label>
+                      <div className="relative">
                         <select 
                           className="w-full p-4 bg-black/40 border border-white/5 rounded-xl text-gray-300 focus:bg-black/60 focus:border-emerald-500/50 focus:outline-none appearance-none cursor-pointer"
                           value={newItem.category} onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
                         >
                           <option>Other</option><option>Vegetable</option><option>Fruit</option><option>Dairy</option><option>Grain</option><option>Meat</option>
                         </select>
-                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
-                           ▼
-                        </div>
-                     </div>
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">▼</div>
+                      </div>
                   </div>
-
-                  {/* Expiry Date (Improved UI) */}
                   <div className="md:col-span-3">
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block ml-1 flex items-center gap-1">
-                       <Calendar className="w-3 h-3"/> Expiry Date
+                        <Calendar className="w-3 h-3"/> Expiry Date
                     </label>
                     <input type="date" required 
                       className="w-full p-4 bg-black/40 border border-white/5 rounded-xl text-gray-300 focus:bg-black/60 focus:border-emerald-500/50 focus:outline-none [color-scheme:dark] cursor-pointer"
                       value={newItem.expiryDate} onChange={(e) => setNewItem({ ...newItem, expiryDate: e.target.value })} 
                     />
                   </div>
-
-                  {/* Submit Button */}
                   <div className="md:col-span-12 flex justify-end mt-2">
                     <button className="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-emerald-900/20 transition-all hover:scale-[1.02] border border-emerald-500/20">
                       Add to Pantry
@@ -366,6 +522,8 @@ const Dashboard = () => {
                         <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Item</th>
                         <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Category</th>
                         <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Qty</th>
+                        {/* 👇 NEW COLUMN: EXPIRY DATE */}
+                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Expiry</th>
                         <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Freshness</th>
                         <th className="px-6 py-4"></th>
                       </tr>
@@ -378,6 +536,12 @@ const Dashboard = () => {
                             <td className="px-6 py-5 font-bold text-gray-200 group-hover:text-white transition-colors">{item.name}</td>
                             <td className="px-6 py-5"><span className="bg-white/5 text-gray-400 text-xs px-3 py-1 rounded-full border border-white/5">{item.category}</span></td>
                             <td className="px-6 py-5 text-sm text-gray-400 font-mono">{item.quantity} {item.unit}</td>
+                            
+                            {/* 👇 NEW CELL: DISPLAY EXPIRY DATE */}
+                            <td className="px-6 py-5 text-sm text-gray-400 font-mono">
+                                {new Date(item.expiryDate).toLocaleDateString()}
+                            </td>
+
                             <td className="px-6 py-5">
                               <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${status.color}`}>
                                 {status.text === "Expired" && <AlertCircle className="w-3 h-3" />} {status.text}
@@ -397,7 +561,7 @@ const Dashboard = () => {
                   {!loading && filteredItems.length === 0 && (
                     <div className="flex flex-col items-center justify-center py-24 text-center">
                       <div className="bg-white/5 p-6 rounded-full mb-4 border border-white/5 animate-pulse">
-                         <Package className="w-10 h-10 text-gray-600" />
+                          <Package className="w-10 h-10 text-gray-600" />
                       </div>
                       <h3 className="text-xl font-bold text-white mb-2">Pantry is Empty</h3>
                       <p className="text-gray-500">Add ingredients to unlock AI recipes.</p>
