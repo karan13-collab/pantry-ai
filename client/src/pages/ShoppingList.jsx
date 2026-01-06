@@ -218,7 +218,7 @@ const ShoppingList = () => {
                       </select>
                       <button
                         onClick={() => handleAddCustomItem(list._id)}
-                        className="bg-blue-600 hover:bg-blue-500 text-white p-3 rounded-xl transition-all shadow-lg shadow-blue-900/20"
+                        className="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-emerald-900/20 transition-all hover:scale-[1.02] border border-emerald-500/20"
                       >
                         <Plus className="w-5 h-5" />
                       </button>

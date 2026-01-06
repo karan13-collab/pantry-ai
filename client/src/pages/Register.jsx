@@ -87,10 +87,10 @@ const Register = () => {
               {/* --- FIX: Added margin-top and restored labels --- */}
               <div className="mt-6">
                 {formData.householdAction === 'create' ? (
-                   <div className="animate-fade-in space-y-2">
-                      <label className="text-xs font-bold text-emerald-500 uppercase tracking-wider block ml-1">Pantry Name</label>
-                      <div className="relative group">
-                        <input type="text" name="householdName" placeholder="e.g. The Penthouse" onChange={onChange} className="w-full p-3 bg-gray-900 border border-gray-800 rounded-xl text-white focus:border-emerald-500 focus:outline-none transition-all placeholder-gray-600" required={formData.householdAction === 'create'}/>
+                   <div className="animate-fade-in space-y-12">
+                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block ml-1">Pantry Name</label>
+                      <div className="relative group ">
+                        <input type="text" name="householdName" placeholder="e.g. The Penthouse" onChange={onChange} className=" w-full p-3 bg-gray-900 border border-gray-800 rounded-xl text-white focus:border-emerald-500 focus:outline-none transition-all placeholder-gray-600" required={formData.householdAction === 'create'}/>
                       </div>
                    </div>
                 ) : (
@@ -179,13 +179,16 @@ const Register = () => {
               </div>
             </div>
 
-            <button type="submit" disabled={isLoading} className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white py-4 rounded-xl font-bold shadow-lg shadow-blue-900/20 transition-all transform hover:scale-[1.01] active:scale-[0.99] flex justify-center gap-2 items-center disabled:opacity-70 disabled:cursor-not-allowed">
+            <button type="submit" disabled={isLoading} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-emerald-900/20 transition-all hover:scale-[1.02] active:scale-[0.99] flex justify-center gap-2 items-center disabled:opacity-70 disabled:cursor-not-allowed">
+
+            {/* bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-emerald-900/20 transition-all hover:scale-[1.02] border border-emerald-500/20" */}
+            
               {isLoading ? 'Creating Account...' : <>Complete Registration <ArrowRight className="w-5 h-5"/></>}
             </button>
           </form>
 
           <p className="mt-8 text-center text-sm text-gray-400">
-            Already have an account? <Link to="/" className="text-blue-400 font-bold hover:text-blue-300 transition-colors">Login here</Link>
+            Already have an account? <Link to="/" className="font-bold text-emerald-400 hover:text-emerald-300 transition-colors">Login here</Link>
           </p>
         </div>
       </div>

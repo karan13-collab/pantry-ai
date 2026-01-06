@@ -330,7 +330,7 @@ const Dashboard = () => {
                   {/* Expiry Date (Improved UI) */}
                   <div className="md:col-span-3">
                     <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block ml-1 flex items-center gap-1">
-                       <Calendar className="w-3 h-3"/> Expiry Date
+                       <Calendar className="w-3 h-3"/> Expiry
                     </label>
                     <input type="date" required 
                       className="w-full p-4 bg-black/40 border border-white/5 rounded-xl text-gray-300 focus:bg-black/60 focus:border-emerald-500/50 focus:outline-none [color-scheme:dark] cursor-pointer"

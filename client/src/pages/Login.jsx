@@ -137,7 +137,7 @@ const Login = () => {
            2. The Overlay: A heavy gradient fade from the bottom and sides to blend it into the dark theme.
         */}
         <img
-          className="absolute inset-0 h-full w-full object-cover scale-105 contrast-110 opacity-60 mix-blend-overlay grayscale-[30%]"
+          className="absolute inset-0 h-full w-full object-cover scale-105 contrast-110 opacity-900  grayscale-[30%]"
           src="https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
           alt="Dark moody food market"
         />
