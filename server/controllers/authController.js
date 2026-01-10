@@ -1,91 +1,114 @@
-const mongoose = require('mongoose');
 const User = require('../models/User');
 const Household = require('../models/Household');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const mongoose = require('mongoose');
+const sendEmail = require('../utils/sendEmail'); 
 
-const generateJoinCode = () => {
-  return Math.random().toString(36).substring(2, 8).toUpperCase();
-};
+const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 
 const calculateActivityLevel = (days) => {
-  if (days >= 6) return 'active';   
-  if (days >= 3) return 'moderate'; 
-  if (days >= 1) return 'light';  
-  return 'sedentary';          
+  if (days >= 6) return 'active';
+  if (days >= 3) return 'moderate';
+  if (days >= 1) return 'light';
+  return 'sedentary';
 };
 
 exports.register = async (req, res) => {
   const { 
     username, email, password, age, height, weight, gender, 
-    workoutDays, allergies,
+    workoutDays, allergies, dietaryPreferences,
     householdAction, joinCode, householdName 
   } = req.body;
 
   try {
     let user = await User.findOne({ email });
-    if (user) return res.status(400).json({ msg: 'User already exists' });
+    
+    if (user && user.isVerified) {
+      return res.status(400).json({ msg: 'User already exists' });
+    }
 
-    const calculatedActivity = calculateActivityLevel(Number(workoutDays) || 0);
-
+    if (user && !user.isVerified) {
+      await User.deleteOne({ email }); 
+    }
 
     const newUserId = new mongoose.Types.ObjectId();
-
     let finalHouseholdId = null;
-    let finalJoinCode = null;
 
     if (householdAction === 'join') {
-      if (!joinCode) return res.status(400).json({ msg: 'Join Code is required.' });
-      
-      const householdToJoin = await Household.findOne({ joinCode: joinCode.toUpperCase() });
-      if (!householdToJoin) return res.status(404).json({ msg: 'Invalid Join Code.' });
-      
-      finalHouseholdId = householdToJoin._id;
-      finalJoinCode = householdToJoin.joinCode;
-
-      await Household.findByIdAndUpdate(finalHouseholdId, { 
-        $push: { members: newUserId } 
-      });
-
+       if (!joinCode) return res.status(400).json({ msg: 'Join Code required' });
+       const householdToJoin = await Household.findOne({ joinCode: joinCode.toUpperCase() });
+       if (!householdToJoin) return res.status(404).json({ msg: 'Invalid Join Code' });
+       finalHouseholdId = householdToJoin._id;
+       await Household.findByIdAndUpdate(finalHouseholdId, { $push: { members: newUserId } });
     } else {
-      const pantryName = householdName || `${username}'s Pantry`;
-      const newCode = generateJoinCode(); 
-      
-      const newHousehold = await Household.create({
-        name: pantryName,
-        joinCode: newCode,
-        admin: newUserId,
-        members: [newUserId], 
-        currency: 'EUR'
-      });
-      finalHouseholdId = newHousehold._id;
-      finalJoinCode = newCode;
+       const newCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+       const newHousehold = await Household.create({
+         name: householdName || `${username}'s Pantry`,
+         joinCode: newCode,
+         admin: newUserId,
+         members: [newUserId]
+       });
+       finalHouseholdId = newHousehold._id;
     }
+
+    const otp = generateOTP();
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); 
+
     user = new User({
-      _id: newUserId, 
-      username, 
-      email, 
-      password, 
-      age, 
-      height, 
-      weight, 
-      gender, 
-      workoutDays: Number(workoutDays), 
-      activityLevel: calculatedActivity, 
-      allergies: allergies || [],       
-      household: finalHouseholdId
+      _id: newUserId,
+      username, email, password, age, height, weight, gender, 
+      workoutDays, 
+      activityLevel: calculateActivityLevel(workoutDays),
+      allergies: allergies || [],
+      dietaryPreferences: dietaryPreferences || 'None', 
+      household: finalHouseholdId,
+      role: 'member',
+      isVerified: false,
+      otp, 
+      otpExpires
     });
 
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(password, salt);
     await user.save();
 
-  
+    await sendEmail(email, otp);
+
+    res.json({ msg: 'OTP Sent', email: email });
+
+  } catch (err) {
+    console.error("Register Error:", err.message);
+    res.status(500).send('Server error');
+  }
+};
+
+exports.verifyEmail = async (req, res) => {
+  const { email, otp } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) return res.status(400).json({ msg: 'User not found' });
+    if (user.isVerified) return res.status(400).json({ msg: 'User already verified' });
+
+    if (user.otp !== otp) {
+      return res.status(400).json({ msg: 'Invalid OTP' });
+    }
+    if (user.otpExpires < Date.now()) {
+      return res.status(400).json({ msg: 'OTP Expired. Please register again.' });
+    }
+
+    user.isVerified = true;
+    user.otp = undefined; 
+    user.otpExpires = undefined;
+    await user.save();
+
     const payload = { 
       user: { 
         id: user.id, 
-        household: finalHouseholdId, 
-        joinCode: finalJoinCode 
+        household: user.household,
+        joinCode: 'FETCH_ON_DASHBOARD' 
       } 
     };
 
@@ -95,30 +118,27 @@ exports.register = async (req, res) => {
     });
 
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    console.error("Verify Error:", err.message);
+    res.status(500).send('Server Error');
   }
 };
 
 exports.login = async (req, res) => {
   const { email, password } = req.body;
-
   try {
-    
     let user = await User.findOne({ email }).populate('household');
     if (!user) return res.status(400).json({ msg: 'Invalid Credentials' });
+
+    if (!user.isVerified) return res.status(400).json({ msg: 'Please verify your email first.' });
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ msg: 'Invalid Credentials' });
 
-    const currentHouseholdId = user.household ? user.household._id : null;
-    const currentJoinCode = user.household ? user.household.joinCode : null;
-
     const payload = { 
         user: { 
             id: user.id, 
-            household: currentHouseholdId, 
-            joinCode: currentJoinCode 
+            household: user.household?._id, 
+            joinCode: user.household?.joinCode 
         } 
     };
     
@@ -126,9 +146,5 @@ exports.login = async (req, res) => {
         if (err) throw err;
         res.json({ token });
     });
-
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
-  }
+  } catch (err) { res.status(500).send('Server Error'); }
 };
