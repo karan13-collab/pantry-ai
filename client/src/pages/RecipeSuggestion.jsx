@@ -1,6 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Clock, BarChart, ShoppingCart, Plus, Loader, Leaf, Heart, X, Check, ChefHat } from 'lucide-react'; 
+import { 
+  ArrowLeft, 
+  Clock, 
+  BarChart, 
+  ShoppingCart, 
+  Plus, 
+  Loader, 
+  Leaf, 
+  Heart, 
+  X, 
+  Check, 
+  ChefHat, 
+  RefreshCw // <--- Imported Refresh Icon
+} from 'lucide-react'; 
 import api from '../services/api';
 
 const RecipeSuggestion = () => {
@@ -19,22 +32,30 @@ const RecipeSuggestion = () => {
   const [newListName, setNewListName] = useState('');
   const [addingToList, setAddingToList] = useState(false);
 
-  // 1. Generate Recipe
+  // --- 1. REUSABLE GENERATE FUNCTION ---
+  const generateRecipe = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // We pass the strategy. 
+      // Note: If your backend supports excluding previous titles, you could pass { strategy, exclude: recipe?.title }
+      const res = await api.post('/inventory/generate-recipe', { strategy });
+      setRecipe(res.data);
+    } catch (err) {
+      console.error(err);
+      setError(err.response?.data?.error || "Failed to generate recipe. The chef might be busy.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial Load
   useEffect(() => {
-    const fetchRecipe = async () => {
-      try {
-        const res = await api.post('/inventory/generate-recipe', { strategy });
-        setRecipe(res.data);
-      } catch (err) {
-        setError(err.response?.data?.error || "Failed to generate recipe");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchRecipe();
+    generateRecipe();
+    // eslint-disable-next-line
   }, [strategy]);
 
-  // 2. Open Modal
+  // --- 2. MODAL FUNCTIONS ---
   const openAddModal = async (item) => {
     setSelectedItem(item);
     setNewListName(''); 
@@ -48,22 +69,19 @@ const RecipeSuggestion = () => {
     }
   };
 
-  // 3. Handle Add to List
   const handleAddToList = async (listId, listName) => {
     setAddingToList(true);
     try {
       await api.post(`/shopping-lists/${listId}/items`, selectedItem);
-      // You could replace this alert with a proper Toast notification later
       alert(`✅ Added ${selectedItem.name} to ${listName}!`);
       setModalOpen(false);
     } catch (err) {
-      alert("Failed to add item. Please try again.");
+      alert("Failed to add item.");
     } finally {
       setAddingToList(false);
     }
   };
 
-  // 4. Create New List & Add
   const handleCreateAndAdd = async () => {
     if (!newListName) return;
     setAddingToList(true);
@@ -74,7 +92,7 @@ const RecipeSuggestion = () => {
       alert(`✅ Created "${newListName}" and added item!`);
       setModalOpen(false);
     } catch (err) {
-      alert("Failed to create list. Check your server connection.");
+      alert("Failed to create list.");
     } finally {
       setAddingToList(false);
     }
@@ -88,7 +106,7 @@ const RecipeSuggestion = () => {
             <ChefHat className="w-16 h-16 text-blue-400 animate-bounce relative z-10" />
         </div>
         <h2 className="text-2xl font-bold text-white mt-6">The AI Chef is Cooking...</h2>
-        <p className="text-slate-500 mt-2">Analyzing your pantry for the best {strategy === 'health' ? 'healthy' : 'waste-saving'} meal.</p>
+        <p className="text-slate-500 mt-2">Analyzing your pantry for {recipe ? 'another' : 'the best'} {strategy === 'health' ? 'healthy' : 'waste-saving'} meal.</p>
       </div>
     );
   }
@@ -99,7 +117,12 @@ const RecipeSuggestion = () => {
         <div className="bg-red-900/20 text-red-400 p-8 rounded-2xl border border-red-500/30 max-w-md text-center backdrop-blur-sm">
           <h3 className="font-bold text-xl mb-2 text-white">Oops!</h3>
           <p className="mb-6">{error}</p>
-          <button onClick={() => navigate('/dashboard')} className="bg-red-600 hover:bg-red-500 text-white px-6 py-2 rounded-xl text-sm font-bold transition-all shadow-lg shadow-red-900/20">Go Back</button>
+          <div className="flex gap-4 justify-center">
+            <button onClick={() => navigate('/dashboard')} className="bg-white/10 text-white px-6 py-2 rounded-xl text-sm font-bold border border-white/10 hover:bg-white/20">Go Back</button>
+            <button onClick={generateRecipe} className="bg-red-600 hover:bg-red-500 text-white px-6 py-2 rounded-xl text-sm font-bold shadow-lg shadow-red-900/20 flex items-center gap-2">
+              <RefreshCw className="w-4 h-4"/> Try Again
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -110,14 +133,27 @@ const RecipeSuggestion = () => {
       
       {/* HEADER IMAGE */}
       <div className="relative h-72 md:h-96 w-full">
-        {/* Dark overlay for better text contrast */}
+        {/* Dark overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent z-10"></div>
         <img src={recipe.image} alt={recipe.title} className="w-full h-full object-cover opacity-80" />
         
         <div className="absolute inset-0 z-20 flex flex-col justify-end p-6 md:p-12 max-w-7xl mx-auto w-full">
-          <button onClick={() => navigate('/dashboard')} className="absolute top-6 left-6 md:left-12 bg-black/40 hover:bg-black/60 backdrop-blur-md text-white p-3 rounded-full border border-white/10 transition-all group">
-            <ArrowLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
-          </button>
+          
+          {/* TOP NAV BUTTONS */}
+          <div className="absolute top-6 left-0 right-0 px-6 md:px-12 flex justify-between items-start">
+             <button onClick={() => navigate('/dashboard')} className="bg-black/40 hover:bg-black/60 backdrop-blur-md text-white p-3 rounded-full border border-white/10 transition-all group">
+                <ArrowLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
+             </button>
+
+             {/* --- REGENERATE BUTTON --- */}
+             <button 
+                onClick={generateRecipe}
+                className="flex items-center gap-2 bg-black/40 hover:bg-blue-600/80 backdrop-blur-md text-white px-5 py-3 rounded-full border border-white/10 transition-all hover:scale-105 shadow-xl group"
+             >
+                <RefreshCw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />
+                <span className="font-bold text-sm">Don't like it? Try Next</span>
+             </button>
+          </div>
           
           <div className="animate-fade-in-up">
             <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold uppercase mb-4 shadow-lg border border-white/10 ${strategy === 'health' ? 'bg-blue-600/90 text-white' : 'bg-emerald-600/90 text-white'}`}>

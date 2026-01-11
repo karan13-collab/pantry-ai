@@ -344,7 +344,7 @@ const Dashboard = () => {
               </div>
               <div>
                 <span className="text-xl font-extrabold text-white tracking-tight block leading-none">PantryAI</span>
-                <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Premium</span>
+                
               </div>
             </div>
 

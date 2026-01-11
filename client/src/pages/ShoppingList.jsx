@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Package, Trash2, Check, Calendar, ShoppingCart, LogOut, Loader, Plus, X } from 'lucide-react';
+import { Package, Trash2, Check, Calendar, ShoppingCart, LogOut, Loader, Plus, X, Tag } from 'lucide-react';
 import api from '../services/api';
 
 // --- UNIT CONVERSION HELPER ---
 const convertToMetric = (amount, originalUnit) => {
   const unit = (originalUnit || '').toLowerCase();
-  // ... (Same Logic)
+  
   if (['oz', 'ounce', 'ounces'].some(u => unit.includes(u))) return { q: Math.round(amount * 28.35), u: 'g' };
   if (['lb', 'pound', 'pounds'].some(u => unit.includes(u))) {
     const grams = amount * 453.6;
@@ -22,10 +22,12 @@ const convertToMetric = (amount, originalUnit) => {
     if (unit.includes('quart')) return { q: Number((amount * 0.94).toFixed(2)), u: 'L' };
     if (unit.includes('pint')) return { q: Math.round(amount * 473), u: 'ml' };
   }
+  
   if (['kg', 'kilogram'].includes(unit)) return { q: amount, u: 'kg' };
   if (['g', 'gram'].includes(unit)) return { q: amount, u: 'g' };
   if (['l', 'liter'].includes(unit)) return { q: amount, u: 'L' };
   if (['ml', 'milliliter'].includes(unit)) return { q: amount, u: 'ml' };
+
   return { q: amount, u: 'pcs' };
 };
 
@@ -115,7 +117,7 @@ const ShoppingList = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-black">
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
         <Loader className="animate-spin text-blue-500 w-12 h-12" />
       </div>
     );
@@ -129,6 +131,7 @@ const ShoppingList = () => {
         <div className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-40"
              style={{ backgroundImage: `url('https://images.unsplash.com/photo-1556910103-1c02745a30bf?q=80&w=2070&auto=format&fit=crop')` }}></div>
         <div className="absolute inset-0 bg-gradient-to-t from-black via-gray-950/90 to-gray-900/80"></div>
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
       </div>
 
       <div className="relative z-10 flex flex-col min-h-screen">
@@ -136,7 +139,8 @@ const ShoppingList = () => {
         {/* Navbar */}
         <nav className="bg-black/40 backdrop-blur-xl sticky top-0 z-40 border-b border-white/5">
           <div className="max-w-6xl mx-auto px-4 h-20 flex justify-between items-center">
-            <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/')}>
+            {/* FIXED: Navigate to /dashboard instead of / */}
+            <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/dashboard')}>
               <div className="bg-gradient-to-br from-gray-800 to-black p-2 rounded-xl border border-white/10 shadow-lg group-hover:border-emerald-500/50 transition-all">
                 <Package className="h-6 w-6 text-emerald-400" />
               </div>
@@ -191,11 +195,11 @@ const ShoppingList = () => {
                     </span>
                   </div>
 
-                  {/* ➕ Add Custom Item Row */}
+                  {/* ➕ Add Custom Item Row (Dark Inputs) */}
                   <div className="px-6 py-4 border-b border-white/5 bg-white/5 flex flex-col sm:flex-row gap-3 items-center">
                     <input
                       type="text"
-                      placeholder="Add custom item..."
+                      placeholder="Add custom item (e.g. Soap)..."
                       className="flex-1 p-3 bg-black/40 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500 transition-all placeholder-slate-600 w-full"
                       value={newItem.name}
                       onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
@@ -218,7 +222,7 @@ const ShoppingList = () => {
                       </select>
                       <button
                         onClick={() => handleAddCustomItem(list._id)}
-                        className="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-emerald-900/20 transition-all hover:scale-[1.02] border border-emerald-500/20"
+                        className="bg-blue-600 hover:bg-blue-500 text-white p-3 rounded-xl transition-all shadow-lg shadow-blue-900/20 border border-blue-500/50"
                       >
                         <Plus className="w-5 h-5" />
                       </button>
@@ -238,7 +242,7 @@ const ShoppingList = () => {
                           {item.image ? (
                             <img src={item.image} alt={item.name} className="w-12 h-12 rounded-xl object-cover bg-black/50" />
                           ) : (
-                            <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center"><Package className="text-slate-600 w-6 h-6"/></div>
+                            <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center border border-white/5"><Package className="text-slate-600 w-6 h-6"/></div>
                           )}
                           <div>
                             <div className="font-bold text-slate-200 capitalize group-hover:text-white transition-colors">{item.name}</div>
@@ -268,7 +272,7 @@ const ShoppingList = () => {
           )}
         </main>
 
-        {/* --- MODAL (Dark Theme) --- */}
+        {/* --- MODAL (Dark Theme with Labels) --- */}
         {modalOpen && selectedItem && (
           <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
             <div className="bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl max-w-md w-full p-6 relative">
@@ -283,7 +287,7 @@ const ShoppingList = () => {
 
               <form onSubmit={confirmPurchase} className="space-y-5">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Quantity</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Quantity & Unit</label>
                   <div className="flex gap-3">
                     <input
                       type="number"
@@ -318,21 +322,26 @@ const ShoppingList = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Category</label>
-                  <select
-                    className="w-full p-3 bg-black/40 border border-slate-700 rounded-xl text-slate-300 focus:border-emerald-500 focus:outline-none transition-all"
-                    value={buyDetails.category}
-                    onChange={(e) => setBuyDetails({ ...buyDetails, category: e.target.value })}
-                  >
-                    <option>Other</option><option>Vegetable</option><option>Fruit</option><option>Dairy</option><option>Grain</option><option>Meat</option>
-                  </select>
+                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1 flex items-center gap-1">
+                     <Tag className="w-3 h-3"/> Category
+                  </label>
+                  <div className="relative">
+                    <select
+                      className="w-full p-3 bg-black/40 border border-slate-700 rounded-xl text-slate-300 focus:border-emerald-500 focus:outline-none transition-all appearance-none cursor-pointer"
+                      value={buyDetails.category}
+                      onChange={(e) => setBuyDetails({ ...buyDetails, category: e.target.value })}
+                    >
+                      <option>Other</option><option>Vegetable</option><option>Fruit</option><option>Dairy</option><option>Grain</option><option>Meat</option>
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">▼</div>
+                  </div>
                 </div>
 
                 <div className="flex gap-3 pt-4 border-t border-slate-800 mt-6">
                   <button type="button" onClick={() => setModalOpen(false)} className="flex-1 py-3 rounded-xl font-bold text-slate-400 hover:text-white hover:bg-white/5 transition-all">
                     Cancel
                   </button>
-                  <button type="submit" className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold shadow-lg shadow-emerald-900/20 transition-all">
+                  <button type="submit" className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold shadow-lg shadow-emerald-900/20 transition-all border border-emerald-500/20">
                     Confirm & Move
                   </button>
                 </div>
