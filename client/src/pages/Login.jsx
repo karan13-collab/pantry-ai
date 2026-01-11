@@ -1,16 +1,16 @@
 import React, { useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
-import { Mail, Lock, ArrowRight, AlertCircle, ChefHat } from 'lucide-react';
+import { User, Lock, ArrowRight, AlertCircle, ChefHat } from 'lucide-react';
 
 const Login = () => {
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [formData, setFormData] = useState({ identifier: '', password: '' });
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const { email, password } = formData;
+  const { identifier, password } = formData;
   
   const onChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -19,7 +19,9 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-    const result = await login(email, password);
+    
+    const result = await login(identifier, password);
+    
     if (result.success) {
       navigate('/dashboard');
     } else {
@@ -49,7 +51,7 @@ const Login = () => {
             </div>
             <h2 className="text-4xl font-bold text-white mb-3">Welcome back.</h2>
             <p className="text-gray-400 text-lg">
-              Log in to manage your smart kitchen.
+              Log in
             </p>
           </div>
 
@@ -64,20 +66,20 @@ const Login = () => {
           {/* Form */}
           <form onSubmit={onSubmit} className="space-y-6">
             
-            {/* Email */}
+            {/* 3. Identifier Input (Username or Email) */}
             <div>
-              <label className="block text-sm font-bold text-gray-300 mb-2 ml-1">Email Address</label>
+              <label className="block text-sm font-bold text-gray-300 mb-2 ml-1">Email or Username</label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-500 group-focus-within:text-emerald-400 transition-colors" />
+                  <User className="h-5 w-5 text-gray-500 group-focus-within:text-emerald-400 transition-colors" />
                 </div>
                 <input
-                  type="email"
-                  name="email"
-                  value={email}
+                  type="text"
+                  name="identifier"
+                  value={identifier}
                   onChange={onChange}
                   className="block w-full pl-11 pr-4 py-4 bg-gray-900 border-2 border-gray-800 rounded-2xl text-gray-100 placeholder-gray-600 focus:outline-none focus:border-emerald-500 focus:bg-gray-900/80 transition-all font-medium"
-                  placeholder="you@example.com"
+                  placeholder="Enter email or username"
                   required
                 />
               </div>
@@ -89,7 +91,7 @@ const Login = () => {
                 <label className="block text-sm font-bold text-gray-300">Password</label>
                 <Link to="/forgot-password" className="text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-colors">
                     Forgot Password?
-                </Link>
+               </Link>
               </div>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -133,26 +135,21 @@ const Login = () => {
 
       {/* === RIGHT SIDE - VISUAL SECTION (Hidden on mobile) === */}
       <div className="hidden lg:block relative flex-1 w-0 overflow-hidden bg-gray-900">
-        {/* 1. The Image: A dark, high-quality moody food image.
-           2. The Overlay: A heavy gradient fade from the bottom and sides to blend it into the dark theme.
-        */}
         <img
           className="absolute inset-0 h-full w-full object-cover scale-105 contrast-110 opacity-900  grayscale-[30%]"
-          src="https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+          src="https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1974&auto=format&fit=crop"
           alt="Dark moody food market"
         />
-        {/* Gradient overlays for mood */}
         <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-900/60 to-emerald-900/20 mix-blend-multiply"></div>
         <div className="absolute inset-0 bg-gradient-to-l from-gray-950 via-transparent to-transparent"></div>
         
-        {/* Optional Content over the image */}
         <div className="absolute bottom-0 left-0 p-16 z-20 max-w-xl">
           <blockquote className="border-l-4 border-emerald-500 pl-6">
             <p className="text-2xl font-medium text-gray-200 italic mb-4">
               "The AI chef suggestions have completely changed how we shop and cook. Less waste, better meals."
             </p>
             <footer className="text-emerald-400 font-bold">
-              — Sarah T., Early Adopter
+              — Aman
             </footer>
           </blockquote>
         </div>

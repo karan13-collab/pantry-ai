@@ -124,9 +124,16 @@ exports.verifyEmail = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
-  const { email, password } = req.body;
+  const { identifier, password } = req.body;
+
   try {
-    let user = await User.findOne({ email }).populate('household');
+    let user = await User.findOne({
+      $or: [
+        { email: identifier },
+        { username: identifier }
+      ]
+    }).populate('household');
+
     if (!user) return res.status(400).json({ msg: 'Invalid Credentials' });
 
     if (!user.isVerified) return res.status(400).json({ msg: 'Please verify your email first.' });
@@ -146,7 +153,11 @@ exports.login = async (req, res) => {
         if (err) throw err;
         res.json({ token });
     });
-  } catch (err) { res.status(500).send('Server Error'); }
+
+  } catch (err) { 
+    console.error(err);
+    res.status(500).send('Server Error'); 
+  }
 };
 
 exports.forgotPassword = async (req, res) => {

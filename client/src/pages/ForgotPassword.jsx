@@ -62,7 +62,7 @@ const ForgotPassword = () => {
             {step === 1 ? "Forgot Password?" : "Reset Password"}
           </h2>
           <p className="text-gray-400 text-sm">
-            {step === 1 ? "No worries, we'll send you reset instructions." : "Create a new secure password."}
+            {step === 1 ? "No worries, we'll send you OTP to reset password." : "Create a new secure password."}
           </p>
         </div>
 

@@ -7,19 +7,18 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-
       setUser({ token }); 
     }
     setLoading(false);
   }, []);
 
-  const login = async (email, password) => {
+  const login = async (identifier, password) => {
     try {
-      const res = await api.post('/auth/login', { email, password });
+      const res = await api.post('/auth/login', { identifier, password });
+      
       localStorage.setItem('token', res.data.token);
       setUser({ token: res.data.token });
       return { success: true };
@@ -31,9 +30,13 @@ export const AuthProvider = ({ children }) => {
   const register = async (formData) => {
     try {
       const res = await api.post('/auth/register', formData);
-      localStorage.setItem('token', res.data.token);
-      setUser({ token: res.data.token });
-      return { success: true };
+      
+      if (res.data.token) {
+        localStorage.setItem('token', res.data.token);
+        setUser({ token: res.data.token });
+      }
+
+      return { success: true, data: res.data };
     } catch (err) {
       return { success: false, msg: err.response?.data?.msg || 'Registration failed' };
     }
