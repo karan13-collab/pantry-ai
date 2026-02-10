@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, Key, ArrowRight, Loader, CheckCircle, AlertTriangle } from 'lucide-react';
 import api from '../services/api';
+import '../css/ForgotPassword.css'; // Import the CSS file
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
@@ -44,59 +45,57 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black font-sans px-4 relative overflow-hidden">
+    <div className="forgot-password-page">
       
       {/* Background FX */}
-      <div className="absolute inset-0 z-0">
-         <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-black to-emerald-950/20"></div>
-         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
-      </div>
+      <div className="bg-gradient"></div>
+      <div className="bg-texture"></div>
 
-      <div className="bg-gray-900/60 backdrop-blur-xl p-8 rounded-3xl shadow-2xl w-full max-w-md border border-white/10 relative z-10 animate-fade-in-up">
+      <div className="password-card">
         
-        <div className="text-center mb-8">
-          <div className="bg-emerald-500/10 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-emerald-500/20 shadow-lg shadow-emerald-900/20">
+        <div className="card-header">
+          <div className="icon-wrapper">
              {step === 1 ? <Key className="w-8 h-8 text-emerald-400" /> : <Lock className="w-8 h-8 text-emerald-400" />}
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">
+          <h2 className="title">
             {step === 1 ? "Forgot Password?" : "Reset Password"}
           </h2>
-          <p className="text-gray-400 text-sm">
+          <p className="subtitle">
             {step === 1 ? "No worries, we'll send you OTP to reset password." : "Create a new secure password."}
           </p>
         </div>
 
         {error && (
-          <div className="bg-red-500/10 border border-red-500/20 text-red-300 p-3 mb-6 rounded-xl text-sm flex items-center gap-2">
+          <div className="alert-box alert-error">
             <AlertTriangle className="w-4 h-4"/> {error}
           </div>
         )}
 
         {successMsg && step === 2 && !error && (
-          <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 p-3 mb-6 rounded-xl text-sm flex items-center gap-2">
+          <div className="alert-box alert-success">
             <CheckCircle className="w-4 h-4"/> {successMsg}
           </div>
         )}
 
         {/* --- FORM STEP 1: ENTER EMAIL --- */}
         {step === 1 && (
-          <form onSubmit={handleRequestOtp} className="space-y-6">
-            <div className="space-y-2">
-               <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Email Address</label>
-               <div className="relative group">
-                  <Mail className="absolute left-4 top-3.5 w-5 h-5 text-gray-500 group-focus-within:text-emerald-400 transition-colors"/>
+          <form onSubmit={handleRequestOtp}>
+            <div className="form-group">
+               <label className="input-label">Email Address</label>
+               <div className="input-wrapper">
+                  <Mail className="input-icon"/>
                   <input 
                     type="email" 
                     placeholder="Enter your email" 
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-12 p-3 bg-black/40 border border-white/10 rounded-xl text-white focus:border-emerald-500 focus:outline-none transition-all placeholder-gray-600" 
+                    className="form-input" 
                     required 
                   />
                </div>
             </div>
 
-            <button type="submit" disabled={loading} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-bold shadow-lg shadow-emerald-900/30 transition-all flex items-center justify-center gap-2">
+            <button type="submit" disabled={loading} className="submit-btn">
               {loading ? <Loader className="w-5 h-5 animate-spin"/> : <>Send Reset Code <ArrowRight className="w-5 h-5"/></>}
             </button>
           </form>
@@ -104,43 +103,43 @@ const ForgotPassword = () => {
 
         {/* --- FORM STEP 2: VERIFY & NEW PASS --- */}
         {step === 2 && (
-          <form onSubmit={handleResetPassword} className="space-y-6">
-             <div className="space-y-2">
-               <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">Verification Code</label>
+          <form onSubmit={handleResetPassword}>
+             <div className="form-group">
+               <label className="input-label">Verification Code</label>
                <input 
                   type="text" 
                   placeholder="000000" 
                   maxLength={6}
                   value={otp}
                   onChange={(e) => setOtp(e.target.value)}
-                  className="w-full text-center text-2xl tracking-[8px] font-mono p-3 bg-black/40 border border-white/10 rounded-xl text-white focus:border-emerald-500 focus:outline-none transition-all placeholder-gray-700" 
+                  className="otp-input" 
                   required 
                 />
              </div>
 
-             <div className="space-y-2">
-               <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">New Password</label>
-               <div className="relative group">
-                  <Lock className="absolute left-4 top-3.5 w-5 h-5 text-gray-500 group-focus-within:text-emerald-400 transition-colors"/>
+             <div className="form-group">
+               <label className="input-label">New Password</label>
+               <div className="input-wrapper">
+                  <Lock className="input-icon"/>
                   <input 
                     type="password" 
                     placeholder="Enter new password" 
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full pl-12 p-3 bg-black/40 border border-white/10 rounded-xl text-white focus:border-emerald-500 focus:outline-none transition-all placeholder-gray-600" 
+                    className="form-input" 
                     required 
                   />
                </div>
              </div>
 
-             <button type="submit" disabled={loading} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-bold shadow-lg shadow-emerald-900/30 transition-all flex items-center justify-center gap-2">
+             <button type="submit" disabled={loading} className="submit-btn">
                {loading ? <Loader className="w-5 h-5 animate-spin"/> : "Reset Password"}
              </button>
           </form>
         )}
 
-        <div className="mt-8 text-center">
-          <Link to="/" className="text-sm text-gray-500 hover:text-white transition-colors flex items-center justify-center gap-2">
+        <div className="footer-link-container">
+          <Link to="/" className="back-link">
             ← Back to Login
           </Link>
         </div>

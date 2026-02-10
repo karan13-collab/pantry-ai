@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Package, Trash2, Check, Calendar, ShoppingCart, LogOut, Loader, Plus, X, Tag } from 'lucide-react';
 import api from '../services/api';
+import '../css/ShoppingList.css'; // Import the CSS file
 
 // --- UNIT CONVERSION HELPER ---
 const convertToMetric = (amount, originalUnit) => {
@@ -117,104 +118,100 @@ const ShoppingList = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950">
+      <div className="loading-screen">
         <Loader className="animate-spin text-blue-500 w-12 h-12" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 font-sans text-slate-200 relative selection:bg-blue-500/30">
+    <div className="shopping-page">
       
       {/* --- BACKGROUND --- */}
-      <div className="fixed inset-0 z-0">
-        <div className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-40"
-             style={{ backgroundImage: `url('https://images.unsplash.com/photo-1556910103-1c02745a30bf?q=80&w=2070&auto=format&fit=crop')` }}></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-gray-950/90 to-gray-900/80"></div>
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
-      </div>
+      <div className="bg-layer-image"></div>
+      <div className="bg-layer-gradient"></div>
+      <div className="bg-layer-noise"></div>
 
-      <div className="relative z-10 flex flex-col min-h-screen">
+      <div className="page-content">
         
         {/* Navbar */}
-        <nav className="bg-black/40 backdrop-blur-xl sticky top-0 z-40 border-b border-white/5">
-          <div className="max-w-6xl mx-auto px-4 h-20 flex justify-between items-center">
-            {/* FIXED: Navigate to /dashboard instead of / */}
-            <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/dashboard')}>
-              <div className="bg-gradient-to-br from-gray-800 to-black p-2 rounded-xl border border-white/10 shadow-lg group-hover:border-emerald-500/50 transition-all">
+        <nav className="navbar">
+          <div className="nav-container">
+            <div className="nav-logo-group" onClick={() => navigate('/dashboard')}>
+              <div className="logo-icon-box">
                 <Package className="h-6 w-6 text-emerald-400" />
               </div>
               <div>
-                 <span className="text-xl font-extrabold text-white tracking-tight block leading-none">PantryAI</span>
-                 <span className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Shopping</span>
+                 <span className="logo-title">PantryAI</span>
+                 <span className="logo-subtitle">Shopping</span>
               </div>
             </div>
-            <div className="flex items-center gap-4">
-              <button onClick={() => navigate('/dashboard')} className="text-slate-400 hover:text-white font-bold text-sm transition-colors">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem'}}>
+              <button onClick={() => navigate('/dashboard')} className="nav-link">
                 Dashboard
               </button>
-              <button onClick={handleLogout} className="flex items-center gap-2 text-slate-400 hover:text-red-400 text-sm font-semibold transition-colors">
+              <button onClick={handleLogout} className="btn-logout">
                 <LogOut className="w-4 h-4" /> Sign Out
               </button>
             </div>
           </div>
         </nav>
 
-        <main className="max-w-4xl mx-auto px-4 py-8 w-full">
-          <div className="flex items-center gap-4 mb-8">
-            <div className="bg-emerald-500/20 p-4 rounded-2xl border border-emerald-500/20 backdrop-blur-sm">
+        <main className="main-wrapper">
+          <div className="page-header">
+            <div className="header-icon-box">
               <ShoppingCart className="w-8 h-8 text-emerald-400" />
             </div>
             <div>
-              <h1 className="text-3xl font-black text-white">Shopping Lists</h1>
-              <p className="text-slate-400">Track what you need, move it to pantry when bought.</p>
+              <h1 className="page-title">Shopping Lists</h1>
+              <p className="page-subtitle">Track what you need, move it to pantry when bought.</p>
             </div>
           </div>
 
           {lists.length === 0 ? (
-            <div className="text-center py-16 bg-white/5 backdrop-blur-md rounded-3xl border border-white/10">
-              <div className="bg-white/5 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-white/5">
+            <div className="empty-state">
+              <div className="empty-icon-circle">
                  <ShoppingCart className="w-8 h-8 text-slate-500" />
               </div>
               <h3 className="text-xl font-bold text-white">No active lists</h3>
               <p className="text-slate-500 mb-6">Generate a recipe to create a shopping list!</p>
-              <button onClick={() => navigate('/dashboard')} className="text-emerald-400 font-bold hover:text-emerald-300 transition-colors">
+              <button onClick={() => navigate('/dashboard')} className="btn-link-dashboard">
                 Go to Dashboard
               </button>
             </div>
           ) : (
-            <div className="grid gap-8">
+            <div className="lists-grid">
               {lists.map(list => (
-                <div key={list._id} className="bg-gray-900/60 backdrop-blur-xl rounded-3xl border border-white/10 overflow-hidden shadow-2xl">
+                <div key={list._id} className="list-card">
                   
                   {/* List Header */}
-                  <div className="bg-black/20 px-6 py-5 border-b border-white/5 flex justify-between items-center">
-                    <h3 className="font-bold text-xl text-white tracking-tight">{list.name}</h3>
-                    <span className="bg-white/5 text-slate-400 text-xs font-bold px-3 py-1 rounded-full border border-white/5 uppercase tracking-wider">
+                  <div className="list-header">
+                    <h3 className="list-name">{list.name}</h3>
+                    <span className="item-count-badge">
                       {list.items.length} Items
                     </span>
                   </div>
 
-                  {/* ➕ Add Custom Item Row (Dark Inputs) */}
-                  <div className="px-6 py-4 border-b border-white/5 bg-white/5 flex flex-col sm:flex-row gap-3 items-center">
+                  {/* ➕ Add Custom Item Row */}
+                  <div className="add-item-row">
                     <input
                       type="text"
                       placeholder="Add custom item (e.g. Soap)..."
-                      className="flex-1 p-3 bg-black/40 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500 transition-all placeholder-slate-600 w-full"
+                      className="input-custom-name"
                       value={newItem.name}
                       onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
                     />
-                    <div className="flex gap-2 w-full sm:w-auto">
+                    <div className="add-inputs-group">
                       <input
                         type="number"
                         min="0.1"
                         step="any"
-                        className="w-20 p-3 bg-black/40 border border-white/10 rounded-xl text-sm text-white focus:outline-none focus:border-blue-500 text-center"
+                        className="input-amount"
                         value={newItem.amount}
                         onChange={(e) => setNewItem({ ...newItem, amount: e.target.value })}
                       />
                       <select
-                        className="p-3 bg-black/40 border border-white/10 rounded-xl text-sm text-slate-300 focus:outline-none focus:border-blue-500 appearance-none px-4 cursor-pointer"
+                        className="input-unit-select"
                         value={newItem.unit}
                         onChange={(e) => setNewItem({ ...newItem, unit: e.target.value })}
                       >
@@ -222,14 +219,14 @@ const ShoppingList = () => {
                       </select>
                       <button
                         onClick={() => handleAddCustomItem(list._id)}
-                        className="bg-blue-600 hover:bg-blue-500 text-white p-3 rounded-xl transition-all shadow-lg shadow-blue-900/20 border border-blue-500/50"
+                        className="btn-add-custom"
                       >
                         <Plus className="w-5 h-5" />
                       </button>
                     </div>
                   </div>
 
-                  <div className="divide-y divide-white/5">
+                  <div className="items-list">
                     {list.items.length === 0 && (
                       <div className="p-8 text-center text-slate-500 text-sm">
                         All items bought! Great job.
@@ -237,28 +234,28 @@ const ShoppingList = () => {
                     )}
 
                     {list.items.map(item => (
-                      <div key={item._id} className="p-4 flex items-center justify-between hover:bg-white/5 transition-colors group">
-                        <div className="flex items-center gap-4">
+                      <div key={item._id} className="list-item-row group">
+                        <div className="item-info-group">
                           {item.image ? (
-                            <img src={item.image} alt={item.name} className="w-12 h-12 rounded-xl object-cover bg-black/50" />
+                            <img src={item.image} alt={item.name} className="item-img" />
                           ) : (
-                            <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center border border-white/5"><Package className="text-slate-600 w-6 h-6"/></div>
+                            <div className="item-placeholder"><Package className="text-slate-600 w-6 h-6"/></div>
                           )}
                           <div>
-                            <div className="font-bold text-slate-200 capitalize group-hover:text-white transition-colors">{item.name}</div>
-                            <div className="text-xs text-slate-500 font-mono">Need: <span className="text-emerald-400">{item.amount} {item.unit}</span></div>
+                            <div className="item-name">{item.name}</div>
+                            <div className="item-meta">Need: <span>{item.amount} {item.unit}</span></div>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="item-actions-group">
                           <button
                             onClick={() => handleBoughtClick(list._id, item)}
-                            className="flex items-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-4 py-2 rounded-xl font-bold text-xs transition-all shadow-lg hover:shadow-emerald-900/20"
+                            className="btn-bought"
                           >
                             <Check className="w-4 h-4" /> Bought
                           </button>
                           <button
                             onClick={() => handleDeleteItem(list._id, item._id)}
-                            className="p-2 text-slate-600 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all"
+                            className="btn-delete"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -272,34 +269,34 @@ const ShoppingList = () => {
           )}
         </main>
 
-        {/* --- MODAL (Dark Theme with Labels) --- */}
+        {/* --- MODAL --- */}
         {modalOpen && selectedItem && (
-          <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-            <div className="bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl max-w-md w-full p-6 relative">
-              <button onClick={() => setModalOpen(false)} className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors">
+          <div className="modal-overlay">
+            <div className="modal-card animate-fade-in">
+              <button onClick={() => setModalOpen(false)} className="btn-close-modal">
                  <X className="w-5 h-5"/>
               </button>
               
-              <h3 className="text-xl font-bold mb-2 text-white">Add to Pantry</h3>
-              <p className="text-sm text-slate-400 mb-6">
+              <h3 className="modal-title">Add to Pantry</h3>
+              <p className="modal-desc">
                 Confirm details for <span className="font-bold text-emerald-400 capitalize">{selectedItem.name}</span>
               </p>
 
-              <form onSubmit={confirmPurchase} className="space-y-5">
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Quantity & Unit</label>
-                  <div className="flex gap-3">
+              <form onSubmit={confirmPurchase}>
+                <div className="form-group">
+                  <label className="form-label">Quantity & Unit</label>
+                  <div className="form-row">
                     <input
                       type="number"
                       min="0.1"
                       step="any"
                       required
-                      className="w-full p-3 bg-black/40 border border-slate-700 rounded-xl text-white font-bold focus:border-emerald-500 focus:outline-none transition-all"
+                      className="modal-input"
                       value={buyDetails.quantity}
                       onChange={(e) => setBuyDetails({ ...buyDetails, quantity: e.target.value })}
                     />
                     <select
-                      className="bg-black/40 px-4 py-3 rounded-xl border border-slate-700 font-bold text-slate-300 focus:border-emerald-500 focus:outline-none transition-all"
+                      className="modal-select"
                       value={buyDetails.unit}
                       onChange={(e) => setBuyDetails({ ...buyDetails, unit: e.target.value })}
                     >
@@ -308,40 +305,41 @@ const ShoppingList = () => {
                   </div>
                 </div>
 
-                <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase mb-2 ml-1 flex items-center gap-1">
+                <div className="form-group">
+                  <label className="form-label">
                     <Calendar className="w-3 h-3" /> Expiry Date
                   </label>
                   <input
                     type="date"
                     required
-                    className="w-full p-3 bg-black/40 border border-slate-700 rounded-xl text-white focus:border-emerald-500 focus:outline-none transition-all [color-scheme:dark]"
+                    className="modal-input"
                     value={buyDetails.expiryDate}
                     onChange={(e) => setBuyDetails({ ...buyDetails, expiryDate: e.target.value })}
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1 flex items-center gap-1">
+                <div className="form-group">
+                  <label className="form-label">
                      <Tag className="w-3 h-3"/> Category
                   </label>
-                  <div className="relative">
+                  <div className="select-wrapper">
                     <select
-                      className="w-full p-3 bg-black/40 border border-slate-700 rounded-xl text-slate-300 focus:border-emerald-500 focus:outline-none transition-all appearance-none cursor-pointer"
+                      className="modal-input appearance-none"
+                      style={{cursor: 'pointer'}}
                       value={buyDetails.category}
                       onChange={(e) => setBuyDetails({ ...buyDetails, category: e.target.value })}
                     >
                       <option>Other</option><option>Vegetable</option><option>Fruit</option><option>Dairy</option><option>Grain</option><option>Meat</option>
                     </select>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">▼</div>
+                    <div className="select-arrow">▼</div>
                   </div>
                 </div>
 
-                <div className="flex gap-3 pt-4 border-t border-slate-800 mt-6">
-                  <button type="button" onClick={() => setModalOpen(false)} className="flex-1 py-3 rounded-xl font-bold text-slate-400 hover:text-white hover:bg-white/5 transition-all">
+                <div className="modal-actions">
+                  <button type="button" onClick={() => setModalOpen(false)} className="btn-cancel">
                     Cancel
                   </button>
-                  <button type="submit" className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold shadow-lg shadow-emerald-900/20 transition-all border border-emerald-500/20">
+                  <button type="submit" className="btn-confirm">
                     Confirm & Move
                   </button>
                 </div>

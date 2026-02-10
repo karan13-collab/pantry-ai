@@ -21,10 +21,11 @@ import {
   Calendar,
   Tag,
   AlertTriangle,
-  Loader
+  Loader,
 } from "lucide-react";
 import api from "../services/api";
 import UserProfile from "../components/userProfile";
+import '../css/Dashboard.css';// Ensure this import is correct
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -53,22 +54,20 @@ const Dashboard = () => {
     category: "Other",
   });
 
+  // ... (Keep existing useEffect and logic functions exactly as they were) ...
   useEffect(() => {
     const fetchData = async () => {
       try {
         const resInventory = await api.get("/inventory");
         setItems(resInventory.data);
-
         try {
           const resHousehold = await api.get("/household/current");
           setHousehold(resHousehold.data);
         } catch (hErr) {
-          console.error("Failed to load household data", hErr);
           setHousehold({ name: "My", joinCode: "----", currency: "EUR" });
         }
         setLoading(false);
       } catch (err) {
-        console.error("Dashboard Load Error", err);
         setLoading(false);
       }
     };
@@ -84,33 +83,27 @@ const Dashboard = () => {
 
   const alertItems = items.filter((item) => {
     const isExpiring = new Date(item.expiryDate) <= new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
-
     const key = item.name.trim().toLowerCase();
     const totalQty = inventoryTotals[key];
     const unit = item.unit ? item.unit.toLowerCase() : 'pcs';
-
     let isGlobalLowStock = false;
     if (['kg', 'l', 'liters', 'litres'].includes(unit)) {
        isGlobalLowStock = totalQty < 1; 
     } else {
        isGlobalLowStock = totalQty <= 1; 
     }
-
     return isGlobalLowStock || isExpiring;
   }).map((item) => {
     const isExpiring = new Date(item.expiryDate) <= new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
-    
     const key = item.name.trim().toLowerCase();
     const totalQty = inventoryTotals[key];
     const unit = item.unit ? item.unit.toLowerCase() : 'pcs';
     let isGlobalLowStock = false;
     if (['kg', 'l', 'liters', 'litres'].includes(unit)) isGlobalLowStock = totalQty < 1;
     else isGlobalLowStock = totalQty <= 1;
-
     let reason = "";
     if (isGlobalLowStock) reason = "Low Stock";
     if (isExpiring) reason = isGlobalLowStock ? "Low & Expiring" : "Expiring Soon";
-
     return { ...item, reason };
   });
 
@@ -118,33 +111,23 @@ const Dashboard = () => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 3000);
   };
-
   const handleOpenChef = () => setShowStrategyModal(true);
-
   const handleGenerateRecipe = async (strategy) => {
     setShowStrategyModal(false);
     navigate("/recipe-suggestion", { state: { strategy } });
   };
-
   const handleAddItem = async (e) => {
     e.preventDefault();
     try {
       if (!newItem.name || !newItem.expiryDate) return;
       const res = await api.post("/inventory", newItem);
       setItems([...items, res.data]);
-      setNewItem({
-        name: "",
-        quantity: 1,
-        unit: "pcs",
-        expiryDate: "",
-        category: "Other",
-      });
+      setNewItem({ name: "", quantity: 1, unit: "pcs", expiryDate: "", category: "Other" });
       showNotification("Item added successfully!", "success");
     } catch (err) {
       showNotification("Failed to add item", "error");
     }
   };
-
   const handleDeleteItem = async (id) => {
     if (!window.confirm("Remove item?")) return;
     try {
@@ -155,65 +138,37 @@ const Dashboard = () => {
       showNotification("Failed to remove item", "error");
     }
   };
-
   const openAddToListModal = async (item) => {
     setItemToAdd(item);
     setNewListName("");
     try {
       const res = await api.get("/shopping-lists");
       setUserLists(res.data);
-    } catch (err) {
-      setUserLists([]);
-    }
+    } catch (err) { setUserLists([]); }
     setListModalOpen(true);
   };
-
   const handleAddToList = async (listId, listName) => {
     setAddingToList(true);
     try {
-      const payload = {
-        name: itemToAdd.name,
-        amount: 1,
-        unit: itemToAdd.unit || "pcs",
-        image: null,
-      };
+      const payload = { name: itemToAdd.name, amount: 1, unit: itemToAdd.unit || "pcs", image: null };
       await api.post(`/shopping-lists/${listId}/items`, payload);
       showNotification(`Added ${itemToAdd.name} to ${listName}`, "success");
       setListModalOpen(false);
-    } catch (err) {
-      showNotification("Failed to add item", "error");
-    } finally {
-      setAddingToList(false);
-    }
+    } catch (err) { showNotification("Failed to add item", "error"); } finally { setAddingToList(false); }
   };
-
   const handleCreateAndAdd = async () => {
     if (!newListName) return;
     setAddingToList(true);
     try {
       const res = await api.post("/shopping-lists", { name: newListName });
       const newListId = res.data._id;
-      const payload = {
-        name: itemToAdd.name,
-        amount: 1,
-        unit: itemToAdd.unit || "pcs",
-        image: null,
-      };
+      const payload = { name: itemToAdd.name, amount: 1, unit: itemToAdd.unit || "pcs", image: null };
       await api.post(`/shopping-lists/${newListId}/items`, payload);
       showNotification(`Created list & added ${itemToAdd.name}`, "success");
       setListModalOpen(false);
-    } catch (err) {
-      showNotification("Failed to create list", "error");
-    } finally {
-      setAddingToList(false);
-    }
+    } catch (err) { showNotification("Failed to create list", "error"); } finally { setAddingToList(false); }
   };
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/");
-  };
-
+  const handleLogout = () => { localStorage.removeItem("token"); navigate("/"); };
   const copyToClipboard = () => {
     if (household?.joinCode) {
       navigator.clipboard.writeText(household.joinCode);
@@ -227,188 +182,92 @@ const Dashboard = () => {
     const today = new Date();
     const expiry = new Date(dateString);
     const diffDays = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
-
-    if (diffDays < 0) return { color: "bg-red-500/10 text-red-400 border border-red-500/20", text: "Expired" };
-    if (diffDays <= 3) return { color: "bg-orange-500/10 text-orange-400 border border-orange-500/20", text: "Expiring Soon" };
-    return { color: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20", text: "Fresh" };
+    if (diffDays < 0) return { className: "dash-status status-danger", text: "Expired" };
+    if (diffDays <= 3) return { className: "dash-status status-warn", text: "Expiring Soon" };
+    return { className: "dash-status status-fresh", text: "Fresh" };
   };
 
-  const filteredItems = items.filter((item) =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredItems = items.filter((item) => item.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
-    <div className="min-h-screen font-sans text-gray-200 relative selection:bg-emerald-500/30">
-      
-      {/* --- BACKGROUND LAYER --- */}
-      <div className="fixed inset-0 z-0">
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-40"
-          style={{ backgroundImage: `url('https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1974&auto=format&fit=crop')` }}
-        ></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-gray-950/90 to-gray-900/80"></div>
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }}></div>
-      </div>
+    <div className="dash-page">
+      {/* Backgrounds */}
+      <div className="dash-bg-img"></div>
+      <div className="dash-bg-overlay"></div>
 
-      {/* --- CONTENT WRAPPER --- */}
-      <div className="relative z-10 flex flex-col min-h-screen">
-
-        {/* --- NOTIFICATIONS --- */}
+      <div className="dash-content-wrapper">
+        {/* Notifications */}
         {notification && (
-          <div className={`fixed top-24 left-1/2 transform -translate-x-1/2 z-[100] flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl border backdrop-blur-xl animate-bounce-in ${
-            notification.type === 'error' 
-              ? 'bg-black/60 border-red-500/30 text-red-200' 
-              : 'bg-black/60 border-emerald-500/30 text-emerald-200'
-          }`}>
-            {notification.type === 'error' ? <XCircle className="w-5 h-5" /> : <CheckCircle className="w-5 h-5" />}
+          <div className="dash-toast" style={{ borderColor: notification.type === 'error' ? '#ef4444' : '#10b981' }}>
+            {notification.type === "error" ? <XCircle className="w-5 h-5 text-red-400" /> : <CheckCircle className="w-5 h-5 text-emerald-400" />}
             <span className="font-bold text-sm">{notification.message}</span>
           </div>
         )}
 
-        {/* --- STRATEGY MODAL --- */}
-        {showStrategyModal && (
-          <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
-            <div className="bg-gray-900/80 border border-white/10 rounded-2xl shadow-2xl max-w-md w-full p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold text-white">Choose Chef's Goal</h3>
-                <button onClick={() => setShowStrategyModal(false)} className="text-gray-400 hover:text-white"><X className="w-5 h-5" /></button>
-              </div>
-              <div className="grid gap-4">
-                <button onClick={() => handleGenerateRecipe("waste")} className="flex items-center gap-4 p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-emerald-900/30 hover:border-emerald-500/30 transition-all text-left group">
-                  <div className="bg-emerald-500/10 p-3 rounded-full text-emerald-400 group-hover:text-emerald-300"><Leaf className="w-6 h-6" /></div>
-                  <div><div className="font-bold text-gray-200">Maximize Fridge</div><div className="text-xs text-gray-500">Use expiring food first.</div></div>
-                </button>
-                <button onClick={() => handleGenerateRecipe("health")} className="flex items-center gap-4 p-4 rounded-xl border border-white/5 bg-white/5 hover:bg-blue-900/30 hover:border-blue-500/30 transition-all text-left group">
-                  <div className="bg-blue-500/10 p-3 rounded-full text-blue-400 group-hover:text-blue-300"><Heart className="w-6 h-6" /></div>
-                  <div><div className="font-bold text-gray-200">Maximize Health</div><div className="text-xs text-gray-500">Strict macros focus.</div></div>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* --- ADD TO SHOPPING LIST MODAL --- */}
-        {listModalOpen && itemToAdd && (
-          <div className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
-            <div className="bg-gray-900/80 border border-white/10 rounded-2xl shadow-2xl max-w-sm w-full p-6 relative">
-              <button onClick={() => setListModalOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-white"><X className="w-5 h-5"/></button>
-              <h3 className="text-lg font-bold text-white mb-1">Restock Item</h3>
-              <p className="text-sm text-gray-400 mb-4">Add <span className="font-bold text-emerald-400">{itemToAdd.name}</span> to...</p>
-              
-              {userLists.length > 0 && (
-                <div className="space-y-2 mb-4 max-h-40 overflow-y-auto custom-scrollbar">
-                  <label className="text-[10px] font-bold text-gray-500 uppercase">Your Lists</label>
-                  {userLists.map(list => (
-                    <button 
-                      key={list._id}
-                      disabled={addingToList}
-                      onClick={() => handleAddToList(list._id, list.name)}
-                      className="w-full text-left p-3 rounded-lg border border-white/5 bg-white/5 hover:bg-emerald-500/20 hover:border-emerald-500/30 flex justify-between items-center group transition-all"
-                    >
-                      <span className="font-medium text-gray-200">{list.name}</span>
-                      <Plus className="w-4 h-4 text-gray-500 group-hover:text-emerald-400" />
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              <div className="border-t border-white/10 pt-4">
-                <label className="text-[10px] font-bold text-gray-500 uppercase mb-2 block">Create New List</label>
-                <div className="flex gap-2">
-                  <input 
-                    type="text" 
-                    placeholder="e.g. Costco" 
-                    className="flex-1 bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-emerald-500/50 focus:outline-none"
-                    value={newListName}
-                    onChange={(e) => setNewListName(e.target.value)}
-                  />
-                  <button 
-                    onClick={handleCreateAndAdd}
-                    disabled={!newListName || addingToList}
-                    className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 rounded-lg font-bold text-sm disabled:opacity-50 transition-colors"
-                  >
-                    {addingToList ? <Loader className="w-4 h-4 animate-spin"/> : "Create"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* --- NAVBAR --- */}
-        <nav className="sticky top-0 z-40 border-b border-white/5 bg-black/40 backdrop-blur-xl">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex justify-between items-center">
-            <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setActiveTab("pantry")}>
-              <div className="bg-gradient-to-br from-gray-800 to-black p-2 rounded-xl border border-white/10 shadow-lg group-hover:border-emerald-500/50 transition-all">
+        {/* Navbar */}
+        <nav className="dash-nav">
+          <div className="dash-nav-container">
+            <div className="dash-brand" onClick={() => setActiveTab("pantry")}>
+              <div className="dash-brand-icon">
                 <Package className="h-6 w-6 text-emerald-400" />
               </div>
-              <div>
-                <span className="text-xl font-extrabold text-white tracking-tight block leading-none">PantryAI</span>
-                
-              </div>
+              <span className="dash-brand-title">PantryAI</span>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="dash-nav-items">
               {household?.joinCode && (
-                <div className="hidden md:flex flex-col items-end border-r border-white/10 pr-4 mr-2">
-                  <span className="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-1">{household.name} Code</span>
-                  <button onClick={copyToClipboard} className="flex items-center gap-2 bg-white/5 hover:bg-white/10 text-gray-300 px-3 py-1 rounded-lg border border-white/5 transition-all text-sm font-mono font-bold tracking-widest hover:text-emerald-400">
+                <div className="dash-code-container">
+                  <span className="dash-label" style={{marginBottom: '2px', alignSelf: 'flex-end'}}>
+                    {household.name} Code
+                  </span>
+                  <button onClick={copyToClipboard} className="dash-code-btn">
                     {household.joinCode}
-                    {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-gray-500" />}
+                    {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
                   </button>
                 </div>
               )}
-              <button onClick={() => navigate("/shopping-list")} className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-all" title="Shopping List">
+              <button onClick={() => navigate("/shopping-list")} className="dash-nav-btn" title="Shopping List">
                 <ShoppingCart className="w-5 h-5" />
               </button>
-              <button onClick={handleLogout} className="flex items-center gap-2 text-gray-400 hover:text-red-400 px-4 py-2 rounded-full text-sm font-bold hover:bg-white/5 transition-all">
+              <button onClick={handleLogout} className="dash-nav-btn">
                 <LogOut className="w-4 h-4" />
               </button>
             </div>
           </div>
         </nav>
 
-        {/* --- MAIN CONTENT --- */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow w-full">
-          
-          {/* TABS */}
-          <div className="flex justify-center mb-10">
-            <div className="bg-black/40 p-1.5 rounded-2xl shadow-2xl border border-white/10 backdrop-blur-md inline-flex">
-              <button onClick={() => setActiveTab("pantry")} className={`flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === "pantry" ? "bg-emerald-600 text-white shadow-lg shadow-emerald-900/50" : "text-gray-400 hover:text-white hover:bg-white/5"}`}>
+        {/* Main Content */}
+        <main className="dash-main">
+          <div className="dash-tabs">
+            <div className="dash-tab-box">
+              <button onClick={() => setActiveTab("pantry")} className={`dash-tab-btn ${activeTab === "pantry" ? "active" : ""}`}>
                 <Package className="w-4 h-4" /> Pantry
               </button>
-              <button onClick={() => setActiveTab("profile")} className={`flex items-center gap-2 px-8 py-3 rounded-xl text-sm font-bold transition-all ${activeTab === "profile" ? "bg-emerald-600 text-white shadow-lg shadow-emerald-900/50" : "text-gray-400 hover:text-white hover:bg-white/5"}`}>
+              <button onClick={() => setActiveTab("profile")} className={`dash-tab-btn ${activeTab === "profile" ? "active" : ""}`}>
                 <User className="w-4 h-4" /> Profile
               </button>
             </div>
           </div>
 
           {activeTab === "pantry" && (
-            <div className="animate-fade-in space-y-8">
-
-              {/* --- 🚀 NEEDS ATTENTION WIDGET --- */}
+            <div className="dash-fade-in">
+              {/* Alert Widget */}
               {alertItems.length > 0 && (
-                <div className="bg-red-500/5 border border-red-500/20 rounded-3xl overflow-hidden backdrop-blur-sm shadow-xl">
-                  <div className="px-6 py-4 border-b border-red-500/10 flex items-center justify-between bg-red-900/20">
-                    <h3 className="text-red-300 font-bold flex items-center gap-2 text-sm uppercase tracking-wide">
-                      <AlertTriangle className="w-4 h-4" /> Needs Attention ({alertItems.length})
-                    </h3>
+                <div className="dash-alert-widget">
+                  <div className="dash-alert-header">
+                    <AlertTriangle className="w-4 h-4" /> Needs Attention ({alertItems.length})
                   </div>
-                  <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="dash-alert-grid">
                     {alertItems.map((item) => (
-                      <div key={item._id} className="flex items-center justify-between p-3 border border-red-500/20 rounded-xl bg-black/20 hover:bg-red-900/10 transition-all">
+                      <div key={item._id} className="dash-alert-card">
                         <div>
-                          <div className="font-bold text-gray-200">{item.name}</div>
-                          <div className="text-[10px] text-red-400 font-bold uppercase tracking-wide">
+                          <div style={{fontWeight:'bold', color: '#e2e8f0'}}>{item.name}</div>
+                          <div style={{fontSize:'0.65rem', color:'#f87171', fontWeight:'bold', textTransform:'uppercase'}}>
                             {item.reason} ({item.quantity} {item.unit})
                           </div>
                         </div>
-                        <button
-                          onClick={() => openAddToListModal(item)}
-                          className="text-red-400 hover:text-white border border-red-500/30 hover:bg-red-500 p-2 rounded-lg transition-all"
-                          title="Add to Shopping List"
-                        >
-                          <Plus className="w-4 h-4" />
+                        <button onClick={() => openAddToListModal(item)} className="dash-nav-btn" title="Add to Shopping List" style={{border: '1px solid #7f1d1d'}}>
+                          <Plus className="w-4 h-4 text-red-400" />
                         </button>
                       </div>
                     ))}
@@ -416,139 +275,101 @@ const Dashboard = () => {
                 </div>
               )}
 
-              {/* HEADER SECTION */}
-              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+              {/* Header & Search */}
+              <div className="dash-header-section">
                 <div>
-                  <h1 className="text-4xl font-black text-white mb-2 drop-shadow-md tracking-tight">{household ? household.name : 'My'} Inventory</h1>
-                  <p className="text-gray-400 flex items-center gap-2 font-medium">
-                    <Users className="w-4 h-4 text-emerald-500"/> 
-                    {household?.members ? `${household.members.length} Household Members` : 'Loading...'}
+                  <h1 className="dash-page-title">{household ? household.name : "My"} Inventory</h1>
+                  <p className="dash-subtitle">
+                    <Users className="w-4 h-4 text-emerald-400" />
+                    {household?.members ? `${household.members.length} Household Members` : "Loading..."}
                   </p>
                 </div>
-                <div className="relative group w-full md:w-96">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <Search className="h-5 w-5 text-gray-500 group-focus-within:text-emerald-400 transition-colors" />
-                  </div>
+                <div className="dash-search-container">
+                  <div className="dash-search-icon"><Search className="h-5 w-5" /></div>
                   <input
                     type="text"
                     placeholder="Search pantry..."
-                    className="block w-full pl-11 pr-4 py-4 bg-black/40 border border-white/10 rounded-2xl text-white placeholder-gray-600 focus:outline-none focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all shadow-xl backdrop-blur-sm"
+                    className="dash-search-input"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
               </div>
 
-              {/* QUICK ADD CARD */}
-              <div className="bg-gray-900/60 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl relative overflow-hidden group">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-transparent opacity-50"></div>
-                <div className="flex items-center gap-3 mb-6 relative z-10">
-                  <div className="bg-emerald-500/10 p-2 rounded-lg border border-emerald-500/20">
+              {/* Quick Add Form */}
+              <div className="dash-quick-add">
+                <div className="dash-quick-title">
+                  <div className="dash-brand-icon" style={{background: 'rgba(16, 185, 129, 0.1)', borderColor: 'rgba(16, 185, 129, 0.2)'}}>
                     <Plus className="w-5 h-5 text-emerald-400" />
                   </div>
-                  <h3 className="text-lg font-bold text-white">Quick Add</h3>
+                  Quick Add
                 </div>
-                
-                <form onSubmit={handleAddItem} className="grid grid-cols-1 md:grid-cols-12 gap-4 relative z-10">
-                  <div className="md:col-span-4">
-                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block ml-1">Item Name</label>
-                    <input type="text" placeholder="e.g. Fresh Milk" required 
-                      className="w-full p-4 bg-black/40 border border-white/5 rounded-xl text-white placeholder-gray-600 focus:bg-black/60 focus:border-emerald-500/50 focus:outline-none transition-all"
-                      value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} 
-                    />
+                <form onSubmit={handleAddItem} className="dash-form-grid">
+                  <div className="d-col-4">
+                    <label className="dash-label">Item Name</label>
+                    <input type="text" placeholder="e.g. Fresh Milk" required className="dash-input"
+                      value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} />
                   </div>
-                  <div className="md:col-span-2">
-                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block ml-1">Qty & Unit</label>
-                    <div className="flex gap-2">
-                      <input type="number" min="1" 
-                        className="w-1/2 p-4 bg-black/40 border border-white/5 rounded-xl text-white focus:bg-black/60 focus:border-emerald-500/50 focus:outline-none text-center"
-                        value={newItem.quantity} onChange={(e) => setNewItem({ ...newItem, quantity: e.target.value })} 
-                      />
-                      <select 
-                        className="w-1/2 p-4 bg-black/40 border border-white/5 rounded-xl text-gray-300 focus:bg-black/60 focus:border-emerald-500/50 focus:outline-none appearance-none"
-                        value={newItem.unit} onChange={(e) => setNewItem({ ...newItem, unit: e.target.value })}
-                      >
+                  <div className="d-col-2">
+                    <label className="dash-label">Qty & Unit</label>
+                    <div style={{display:'flex', gap:'0.5rem'}}>
+                      <input type="number" min="1" className="dash-input" style={{textAlign:'center'}}
+                        value={newItem.quantity} onChange={(e) => setNewItem({ ...newItem, quantity: e.target.value })} />
+                      <select className="dash-input" value={newItem.unit} onChange={(e) => setNewItem({ ...newItem, unit: e.target.value })}>
                         <option>pcs</option><option>kg</option><option>L</option>
                       </select>
                     </div>
                   </div>
-                  <div className="md:col-span-3">
-                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block ml-1 flex items-center gap-1">
-                        <Tag className="w-3 h-3"/> Category
-                      </label>
-                      <div className="relative">
-                        <select 
-                          className="w-full p-4 bg-black/40 border border-white/5 rounded-xl text-gray-300 focus:bg-black/60 focus:border-emerald-500/50 focus:outline-none appearance-none cursor-pointer"
-                          value={newItem.category} onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
-                        >
-                          <option>Other</option><option>Vegetable</option><option>Fruit</option><option>Dairy</option><option>Grain</option><option>Meat</option>
-                        </select>
-                        <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">▼</div>
-                      </div>
+                  <div className="d-col-3">
+                    <label className="dash-label"><Tag className="w-3 h-3 inline mr-1"/> Category</label>
+                    <select className="dash-input" value={newItem.category} onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}>
+                      <option>Other</option><option>Vegetable</option><option>Fruit</option><option>Dairy</option><option>Grain</option><option>Meat</option>
+                    </select>
                   </div>
-                  <div className="md:col-span-3">
-                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block ml-1 flex items-center gap-1">
-                        <Calendar className="w-3 h-3"/> Expiry Date
-                    </label>
-                    <input type="date" required 
-                      className="w-full p-4 bg-black/40 border border-white/5 rounded-xl text-gray-300 focus:bg-black/60 focus:border-emerald-500/50 focus:outline-none [color-scheme:dark] cursor-pointer"
-                      value={newItem.expiryDate} onChange={(e) => setNewItem({ ...newItem, expiryDate: e.target.value })} 
-                    />
+                  <div className="d-col-3">
+                    <label className="dash-label"><Calendar className="w-3 h-3 inline mr-1"/> Expiry Date</label>
+                    <input type="date" required className="dash-input" style={{colorScheme:'dark'}}
+                      value={newItem.expiryDate} onChange={(e) => setNewItem({ ...newItem, expiryDate: e.target.value })} />
                   </div>
-                  <div className="md:col-span-12 flex justify-end mt-2">
-                    <button className="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-emerald-900/20 transition-all hover:scale-[1.02] border border-emerald-500/20">
-                      Add to Pantry
-                    </button>
+                  <div className="d-col-12" style={{display:'flex', justifyContent:'flex-end', marginTop:'0.5rem'}}>
+                    <button className="dash-btn-primary">Add to Pantry</button>
                   </div>
                 </form>
               </div>
 
-              {/* INVENTORY TABLE CARD */}
-              <div className="bg-gray-900/60 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden shadow-2xl min-h-[400px]">
-                <div className="p-6 border-b border-white/5 flex justify-between items-center bg-black/20">
-                  <h3 className="text-xl font-bold text-white flex items-center gap-2">
+              {/* Inventory Table */}
+              <div className="dash-table-card">
+                <div className="dash-table-header">
+                  <h3 style={{fontSize:'1.25rem', fontWeight:'bold', color:'white', display:'flex', alignItems:'center', gap:'0.5rem'}}>
                     <ChefHat className="text-orange-400" /> Pantry Stock
                   </h3>
-                  <button onClick={handleOpenChef} disabled={items.length === 0} 
-                    className="bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 border border-orange-500/30 px-6 py-2 rounded-xl font-bold shadow-lg disabled:opacity-50 transition-all flex items-center gap-2">
+                  <button onClick={handleOpenChef} disabled={items.length === 0} className="dash-ai-btn">
                     <ChefHat className="w-4 h-4" /> AI Suggestion
                   </button>
                 </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead className="bg-black/30">
+                <div className="dash-table-wrap">
+                  <table className="dash-table">
+                    <thead>
                       <tr>
-                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Item</th>
-                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Category</th>
-                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Qty</th>
-                        {/* 👇 NEW COLUMN: EXPIRY DATE */}
-                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Expiry</th>
-                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Freshness</th>
-                        <th className="px-6 py-4"></th>
+                        <th>Item</th><th>Category</th><th>Qty</th><th>Expiry</th><th>Freshness</th><th></th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/5">
+                    <tbody>
                       {filteredItems.map((item) => {
                         const status = getExpiryStatus(item.expiryDate);
                         return (
-                          <tr key={item._id} className="hover:bg-white/5 transition-colors group">
-                            <td className="px-6 py-5 font-bold text-gray-200 group-hover:text-white transition-colors">{item.name}</td>
-                            <td className="px-6 py-5"><span className="bg-white/5 text-gray-400 text-xs px-3 py-1 rounded-full border border-white/5">{item.category}</span></td>
-                            <td className="px-6 py-5 text-sm text-gray-400 font-mono">{item.quantity} {item.unit}</td>
-                            
-                            {/* 👇 NEW CELL: DISPLAY EXPIRY DATE */}
-                            <td className="px-6 py-5 text-sm text-gray-400 font-mono">
-                                {new Date(item.expiryDate).toLocaleDateString()}
-                            </td>
-
-                            <td className="px-6 py-5">
-                              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${status.color}`}>
+                          <tr key={item._id}>
+                            <td style={{fontWeight:'bold', color:'#e2e8f0'}}>{item.name}</td>
+                            <td><span style={{background:'rgba(255,255,255,0.05)', padding:'2px 8px', borderRadius:'99px', fontSize:'0.75rem', border:'1px solid rgba(255,255,255,0.05)'}}>{item.category}</span></td>
+                            <td style={{fontFamily:'monospace', color:'#94a3b8'}}>{item.quantity} {item.unit}</td>
+                            <td style={{fontFamily:'monospace', color:'#94a3b8'}}>{new Date(item.expiryDate).toLocaleDateString()}</td>
+                            <td>
+                              <span className={status.className}>
                                 {status.text === "Expired" && <AlertCircle className="w-3 h-3" />} {status.text}
                               </span>
                             </td>
-                            <td className="px-6 py-5 text-right">
-                              <button onClick={() => handleDeleteItem(item._id)} className="text-gray-600 hover:text-red-400 transition-colors p-2 hover:bg-red-500/10 rounded-lg">
+                            <td style={{textAlign:'right'}}>
+                              <button onClick={() => handleDeleteItem(item._id)} className="dash-nav-btn hover:text-red-400 hover:bg-red-900/20">
                                 <Trash2 className="w-4 h-4" />
                               </button>
                             </td>
@@ -557,27 +378,82 @@ const Dashboard = () => {
                       })}
                     </tbody>
                   </table>
-                  
                   {!loading && filteredItems.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-24 text-center">
-                      <div className="bg-white/5 p-6 rounded-full mb-4 border border-white/5 animate-pulse">
-                          <Package className="w-10 h-10 text-gray-600" />
+                    <div style={{padding:'4rem', textAlign:'center', color:'#64748b'}}>
+                      <div style={{background:'rgba(255,255,255,0.05)', padding:'1rem', borderRadius:'50%', display:'inline-block', marginBottom:'1rem'}}>
+                        <Package className="w-8 h-8" />
                       </div>
-                      <h3 className="text-xl font-bold text-white mb-2">Pantry is Empty</h3>
-                      <p className="text-gray-500">Add ingredients to unlock AI recipes.</p>
+                      <h3>Pantry is Empty</h3>
+                      <p>Add ingredients to unlock AI recipes.</p>
                     </div>
                   )}
                 </div>
               </div>
+
             </div>
           )}
 
           {activeTab === "profile" && (
-            <div className="animate-fade-in max-w-4xl mx-auto bg-gray-900/60 backdrop-blur-xl rounded-3xl p-8 border border-white/10 shadow-2xl">
-              <UserProfile showNotification={showNotification} /> 
-            </div>
+             <div className="dash-fade-in">
+               <div className="dash-quick-add">
+                  <UserProfile showNotification={showNotification} />
+               </div>
+             </div>
           )}
         </main>
+
+        {/* --- MODALS --- */}
+        {showStrategyModal && (
+          <div className="dash-modal-overlay">
+            <div className="dash-modal dash-fade-in">
+              <div style={{display:'flex', justifyContent:'space-between', marginBottom:'1rem'}}>
+                <h3 style={{fontSize:'1.25rem', fontWeight:'bold', color:'white'}}>Choose Chef's Goal</h3>
+                <button onClick={() => setShowStrategyModal(false)} className="dash-modal-close"><X className="w-5 h-5" /></button>
+              </div>
+              <button onClick={() => handleGenerateRecipe("waste")} className="dash-strategy-btn">
+                <div style={{padding:'0.5rem', background:'rgba(16, 185, 129, 0.1)', borderRadius:'50%', color:'#34d399'}}><Leaf className="w-6 h-6"/></div>
+                <div><div style={{fontWeight:'bold', color:'#e2e8f0'}}>Maximize Fridge</div><div style={{fontSize:'0.75rem', color:'#94a3b8'}}>Use expiring food first.</div></div>
+              </button>
+              <button onClick={() => handleGenerateRecipe("health")} className="dash-strategy-btn">
+                <div style={{padding:'0.5rem', background:'rgba(59, 130, 246, 0.1)', borderRadius:'50%', color:'#60a5fa'}}><Heart className="w-6 h-6"/></div>
+                <div><div style={{fontWeight:'bold', color:'#e2e8f0'}}>Maximize Health</div><div style={{fontSize:'0.75rem', color:'#94a3b8'}}>Strict macros focus.</div></div>
+              </button>
+            </div>
+          </div>
+        )}
+
+        {listModalOpen && itemToAdd && (
+          <div className="dash-modal-overlay">
+            <div className="dash-modal dash-fade-in">
+              <button onClick={() => setListModalOpen(false)} className="dash-modal-close"><X className="w-5 h-5"/></button>
+              <h3 style={{fontSize:'1.125rem', fontWeight:'bold', color:'white', marginBottom:'0.25rem'}}>Restock Item</h3>
+              <p style={{color:'#94a3b8', fontSize:'0.875rem', marginBottom:'1.5rem'}}>Add <span style={{fontWeight:'bold', color:'#34d399'}}>{itemToAdd.name}</span> to...</p>
+              
+              {userLists.length > 0 && (
+                <div className="dash-list-items">
+                  <span className="dash-label">Your Lists</span>
+                  {userLists.map(list => (
+                    <button key={list._id} disabled={addingToList} onClick={() => handleAddToList(list._id, list.name)} className="dash-list-btn group">
+                      <span style={{fontWeight:'500'}}>{list.name}</span>
+                      <Plus className="w-4 h-4 text-gray-500 group-hover:text-emerald-400" />
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <div style={{borderTop:'1px solid rgba(255,255,255,0.1)', paddingTop:'1rem'}}>
+                <span className="dash-label">Create New List</span>
+                <div style={{display:'flex', gap:'0.5rem'}}>
+                  <input type="text" placeholder="e.g. Costco" className="dash-input" style={{padding:'0.5rem 1rem'}}
+                    value={newListName} onChange={(e) => setNewListName(e.target.value)} />
+                  <button onClick={handleCreateAndAdd} disabled={!newListName || addingToList} className="dash-btn-primary" style={{width:'auto', padding:'0.5rem 1rem'}}>
+                    {addingToList ? <Loader className="w-4 h-4 dash-spin"/> : "Create"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
