@@ -124,13 +124,13 @@ exports.verifyEmail = async (req, res) => {
 };
 
 exports.login = async (req, res) => {
-  const { identifier, password } = req.body;
+  const { username, password } = req.body;
 
   try {
     let user = await User.findOne({
       $or: [
-        { email: identifier },
-        { username: identifier }
+        { email: username },
+        { username: username }
       ]
     }).populate('household');
 

@@ -172,19 +172,19 @@ const UserProfile = () => {
             <form onSubmit={handleSaveProfile} className="profile-form">
               <div className="form-grid-2">
                 <div>
-                  <label className="input-label">Weight (kg)</label>
+                  <label className="input">Weight (kg)</label>
                   <input type="number" name="weight" value={formData.weight} onChange={handleChange} className="profile-input" />
                 </div>
                 <div>
-                  <label className="input-label">Height (cm)</label>
+                  <label className="input">Height (cm)</label>
                   <input type="number" name="height" value={formData.height} onChange={handleChange} className="profile-input" />
                 </div>
                 <div>
-                  <label className="input-label">Age</label>
+                  <label className="input">Age</label>
                   <input type="number" name="age" value={formData.age} onChange={handleChange} className="profile-input" />
                 </div>
                 <div>
-                  <label className="input-label">Activity Level</label>
+                  <label className="input">Activity Level</label>
                   <select name="activityLevel" value={formData.activityLevel} onChange={handleChange} className="profile-input">
                     <option value="sedentary">0-1 Days (Sedentary)</option>
                     <option value="light">2-3 Days (Light)</option>
@@ -195,7 +195,7 @@ const UserProfile = () => {
               </div>
 
               <div>
-                <label className="input-label">Dietary Preference</label>
+                <label className="input">Dietary Preference</label>
                 <select name="dietaryPreferences" value={formData.dietaryPreferences} onChange={handleChange} className="profile-input">
                   <option value="None">None</option>
                   <option value="Vegetarian">Vegetarian</option>
@@ -206,7 +206,7 @@ const UserProfile = () => {
               </div>
 
               <div>
-                <label className="input-label">Allergies (comma separated)</label>
+                <label className="input">Allergies (comma separated)</label>
                 <input type="text" name="allergies" value={formData.allergies} onChange={handleChange} placeholder="Peanuts, Shellfish..." className="profile-input" />
               </div>
 

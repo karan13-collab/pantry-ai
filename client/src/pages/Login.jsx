@@ -3,17 +3,16 @@ import { AuthContext } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { User, Lock, ArrowRight, AlertCircle, ChefHat } from 'lucide-react';
 
-// IMPORTANT: This imports the separate CSS file
 import '../css/login.css'; 
 
 const Login = () => {
-  const [formData, setFormData] = useState({ identifier: '', password: '' });
+  const [formData, setFormData] = useState({ username: '', password: '' });
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const { identifier, password } = formData;
+  const { username, password } = formData;
   
   const onChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -23,7 +22,7 @@ const Login = () => {
     setIsLoading(true);
     setError('');
     
-    const result = await login(identifier, password);
+    const result = await login(username, password);
     
     if (result.success) {
       navigate('/dashboard');
@@ -34,52 +33,47 @@ const Login = () => {
   };
 
   return (
-    <div className="login-page">
-      
-      {/* === LEFT SIDE - FORM SECTION === */}
-      <div className="left-section">
-        
-        {/* Subtle Tech Background Pattern */}
-        <div className="tech-pattern"></div>
+    <div className="login_page">
 
-        <div className="login-content">
+      <div className="login_left_part">
+
+        <div className="login_box">
           
-          {/* Logo Header */}
-          <div className="header-section">
-            <div className="logo-container">
-              <div className="logo-icon-bg">
+
+          <div className="header_space">
+            <div className="logo_container">
+              <div className="logo_icon_bg">
                  <ChefHat className="w-6 h-6 text-white" />
               </div>
-              <h1 className="logo-text">PantryAI</h1>
+              <h1 className="logo_text">PantryAI</h1>
             </div>
-            <h2 className="welcome-title">Welcome back.</h2>
-            <p className="welcome-subtitle">Log in</p>
+            <h2 className="welcome_title">Welcome back.</h2>
+            <p className="welcome_subtitle">Log in</p>
           </div>
 
-          {/* Error Display */}
+      
           {error && (
-             <div className="error-message">
+             <div className="error_message">
                <AlertCircle className="w-5 h-5 shrink-0" color="#ef4444" />
                <span className="font-medium">{error}</span>
              </div>
           )}
 
-          {/* Form */}
           <form onSubmit={onSubmit}>
             
-            {/* Identifier Input */}
-            <div className="form-group">
-              <label className="input-label">Email or Username</label>
+       
+            <div className="email_box_margin">
+              <label className="input">Email or Username</label>
               <div className="input-wrapper">
                 <div className="input-icon">
                   <User className="h-5 w-5" />
                 </div>
                 <input
                   type="text"
-                  name="identifier"
-                  value={identifier}
+                  name="username"
+                  value={username}
                   onChange={onChange}
-                  className="form-input"
+                  className="form_input"
                   placeholder="Enter email or username"
                   required
                 />
@@ -89,7 +83,7 @@ const Login = () => {
             {/* Password Input */}
             <div className="form-group">
               <div className="label-row">
-                <label className="input-label" style={{marginBottom: 0}}>Password</label>
+                <label className="input" style={{marginBottom: 0}}>Password</label>
                 <Link to="/forgot-password" className="forgot-link">
                     Forgot Password?
                </Link>

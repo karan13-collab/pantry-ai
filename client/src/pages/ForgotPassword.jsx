@@ -81,7 +81,7 @@ const ForgotPassword = () => {
         {step === 1 && (
           <form onSubmit={handleRequestOtp}>
             <div className="form-group">
-               <label className="input-label">Email Address</label>
+               <label className="input">Email Address</label>
                <div className="input-wrapper">
                   <Mail className="input-icon"/>
                   <input 
@@ -105,7 +105,7 @@ const ForgotPassword = () => {
         {step === 2 && (
           <form onSubmit={handleResetPassword}>
              <div className="form-group">
-               <label className="input-label">Verification Code</label>
+               <label className="input">Verification Code</label>
                <input 
                   type="text" 
                   placeholder="000000" 
@@ -118,7 +118,7 @@ const ForgotPassword = () => {
              </div>
 
              <div className="form-group">
-               <label className="input-label">New Password</label>
+               <label className="input">New Password</label>
                <div className="input-wrapper">
                   <Lock className="input-icon"/>
                   <input 

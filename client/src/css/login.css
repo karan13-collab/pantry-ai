@@ -15,8 +15,7 @@
     --error-icon: #ef4444;
   }
   
-  /* === Layout & Containers === */
-  .login-page {
+  .login_page {
     min-height: 100vh;
     display: flex;
     background-color: var(--bg-dark);
@@ -25,91 +24,72 @@
     color: var(--text-main);
   }
   
-  .left-section {
+  .login_left_part {
     flex: 1;
     display: flex;
-    flex-direction: column;
-    justify-content: center;
     padding: 3rem 1rem;
-    position: relative;
-    z-index: 10;
-    border-right: 1px solid rgba(31, 41, 55, 0.5);
   }
   
   @media (min-width: 640px) {
-    .left-section { padding-left: 1.5rem; padding-right: 1.5rem; }
+    .login_left_part { padding-left: 1.5rem; padding-right: 1.5rem; }
   }
   
   @media (min-width: 1024px) {
-    .left-section { flex: none; width: 50%; }
+    .login_left_part { flex: none; width: 50%; }
   }
   
   @media (min-width: 1280px) {
-    .left-section { width: 45%; }
+    .login_left_part { width: 45%; }
   }
   
-  /* === Background Patterns === */
-  .tech-pattern {
-    position: absolute;
-    inset: 0;
-    opacity: 0.03;
-    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-    z-index: 0;
-  }
   
-  .login-content {
+  .login_box {
     margin: 0 auto;
-    width: 100%;
-    max-width: 24rem; /* max-w-sm */
-    position: relative;
-    z-index: 20;
-    animation: fadeInUp 0.5s ease-out;
+    max-width: 380px; 
+    animation: fadeInUp 0.8s ease-out; 
   }
   
   @media (min-width: 1024px) {
-    .login-content { width: 24rem; }
+    .login_box { width: 24rem; }
   }
   
-  /* === Header & Logo === */
-  .header-section {
+  .header_space {
     margin-bottom: 3rem;
   }
   
-  .logo-container {
+  .logo_container {
     display: flex;
     align-items: center;
     gap: 0.75rem;
     margin-bottom: 1rem;
   }
   
-  .logo-icon-bg {
-    background: linear-gradient(to top right, #10b981, #2dd4bf);
+  .logo_icon_bg {
+    background: linear-gradient(to top right, #063a29, #2dd4bf);
     padding: 0.625rem;
-    border-radius: 0.75rem;
-    box-shadow: 0 10px 15px -3px rgba(6, 78, 59, 0.3);
+    border-radius: 0.85rem;
   }
   
-  .logo-text {
+  .logo_text {
     font-size: 1.5rem;
     font-weight: 800;
     letter-spacing: -0.025em;
     color: white;
   }
   
-  .welcome-title {
+  .welcome_title {
     font-size: 2.25rem;
     font-weight: 700;
     margin-bottom: 0.75rem;
     color: white;
   }
   
-  .welcome-subtitle {
+  .welcome_subtitle {
     color: var(--text-muted);
     font-size: 1.125rem;
   }
   
-  /* === Form Elements === */
-  .error-message {
+  .error_message {
     background-color: var(--error-bg);
     border-left: 4px solid var(--error-icon);
     color: var(--error-text);
@@ -117,17 +97,16 @@
     margin-bottom: 1.5rem;
     border-radius: 0 0.5rem 0.5rem 0;
     display: flex;
-    align-items: center;
     gap: 0.75rem;
     font-size: 0.875rem;
     animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
   }
   
-  .form-group {
+  .email_box_margin {
     margin-bottom: 1.5rem;
   }
   
-  .input-label {
+  .input {
     display: block;
     font-size: 0.875rem;
     font-weight: 700;
@@ -193,7 +172,7 @@
     transition: all 0.2s;
   }
   
-  .form-input::placeholder {
+  .form_input::placeholder {
     color: #4b5563; /* gray-600 */
   }
   
