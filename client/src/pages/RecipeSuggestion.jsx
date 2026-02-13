@@ -1,23 +1,86 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { 
-  ArrowLeft, 
-  Clock, 
-  BarChart, 
-  ShoppingCart, 
-  Plus, 
-  Loader, 
-  Leaf, 
-  Heart, 
-  X, 
-  Check, 
-  ChefHat, 
-  RefreshCw 
+  ArrowLeft, Clock, BarChart, ShoppingCart, Plus, Loader, Leaf, Heart, X, Check, ChefHat, RefreshCw 
 } from 'lucide-react'; 
 import api from '../services/api';
-
-// IMPORTANT: Import the CSS file
 import '../css/RecipeSuggestion.css';
+
+const LoadingScreen = ({ strategy }) => (
+  <div className="rs-center-screen">
+    <div className="relative">
+       <div className="absolute inset-0 bg-blue-500 blur-xl opacity-20 rs-pulse"></div>
+       <ChefHat className="w-16 h-16 text-blue-400 relative z-10 animate-bounce" />
+    </div>
+    <h2 className="text-2xl font-bold mt-6 text-white">The AI Chef is Cooking...</h2>
+    <p className="text-slate-500 mt-2">Finding the best {strategy === 'health' ? 'healthy' : 'waste-saving'} recipe for you.</p>
+  </div>
+);
+
+const ErrorScreen = ({ error, onRetry, onBack }) => (
+  <div className="rs-center-screen">
+    <div className="rs-card max-w-md bg-red-900/20 border-red-500/30 text-center">
+      <h3 className="font-bold text-xl text-red-400 mb-2">Oops!</h3>
+      <p className="mb-6 text-red-200">{error}</p>
+      <div className="flex justify-center gap-4">
+        <button onClick={onBack} className="rs-btn-glass rs-btn-back px-6">Go Back</button>
+        <button onClick={onRetry} className="bg-red-600 hover:bg-red-500 text-white px-6 py-2 rounded-xl font-bold transition-colors">
+          Try Again
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+const AddToListModal = ({ isOpen, onClose, selectedItem, userLists, onCreate }) => {
+  const [newListName, setNewListName] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  if (!isOpen || !selectedItem) return null;
+
+  const handleCreate = async () => {
+    if (!newListName) return;
+    setLoading(true);
+    await onCreate(newListName);
+    setLoading(false);
+  };
+
+  return (
+    <div className="rs-modal-overlay">
+      <div className="rs-modal-box animate-fade-in-up">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-bold text-white">Add to Shopping List</h3>
+          <button onClick={onClose} className="text-slate-500 hover:text-white"><X size={20}/></button>
+        </div>
+        <p className="text-sm text-slate-400 mb-6">Where should we save <span className="font-bold text-blue-400">{selectedItem.name}</span>?</p>
+        
+        {/* Existing Lists */}
+        <div className="max-h-40 overflow-y-auto mb-4 custom-scrollbar">
+           {userLists.map(list => (
+             <button key={list._id} onClick={() => onCreate(null, list._id, list.name)} className="rs-list-btn group">
+               <span className="font-medium group-hover:text-blue-400">{list.name}</span>
+               <Plus size={16} className="group-hover:text-blue-400" />
+             </button>
+           ))}
+        </div>
+
+        {/* Create New */}
+        <div className="rs-input-group">
+          <input 
+            type="text" 
+            placeholder="New list name..." 
+            className="rs-input"
+            value={newListName}
+            onChange={(e) => setNewListName(e.target.value)}
+          />
+          <button onClick={handleCreate} disabled={!newListName || loading} className="rs-btn-create">
+             {loading ? <Loader className="rs-spin w-4 h-4"/> : "Create"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const RecipeSuggestion = () => {
   const location = useLocation();
@@ -28,14 +91,11 @@ const RecipeSuggestion = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Shopping List Modal State
+  // Modal State
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [userLists, setUserLists] = useState([]);
-  const [newListName, setNewListName] = useState('');
-  const [addingToList, setAddingToList] = useState(false);
 
-  // --- 1. REUSABLE GENERATE FUNCTION ---
   const generateRecipe = async () => {
     setLoading(true);
     setError(null);
@@ -43,286 +103,160 @@ const RecipeSuggestion = () => {
       const res = await api.post('/inventory/generate-recipe', { strategy });
       setRecipe(res.data);
     } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.error || "Failed to generate recipe. The chef might be busy.");
+      setError(err.response?.data?.error || "Failed to generate recipe.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Initial Load
-  useEffect(() => {
-    generateRecipe();
-    // eslint-disable-next-line
-  }, [strategy]);
+  useEffect(() => { generateRecipe(); }, [strategy]);
 
-  // --- 2. MODAL FUNCTIONS ---
   const openAddModal = async (item) => {
     setSelectedItem(item);
-    setNewListName(''); 
     try {
       const res = await api.get('/shopping-lists');
       setUserLists(res.data);
-    } catch (err) {
-      setUserLists([]); 
-    } finally {
-      setModalOpen(true); 
-    }
+    } catch (err) { setUserLists([]); }
+    setModalOpen(true);
   };
 
-  const handleAddToList = async (listId, listName) => {
-    setAddingToList(true);
+  const handleAddToList = async (newListName, existingListId = null, existingListName = null) => {
     try {
+      let listId = existingListId;
+      if (newListName && !listId) {
+         const res = await api.post('/shopping-lists', { name: newListName });
+         listId = res.data._id;
+      }
       await api.post(`/shopping-lists/${listId}/items`, selectedItem);
-      alert(`✅ Added ${selectedItem.name} to ${listName}!`);
+      alert(`Added ${selectedItem.name} to ${existingListName || newListName}`);
       setModalOpen(false);
     } catch (err) {
       alert("Failed to add item.");
-    } finally {
-      setAddingToList(false);
     }
   };
 
-  const handleCreateAndAdd = async () => {
-    if (!newListName) return;
-    setAddingToList(true);
-    try {
-      const res = await api.post('/shopping-lists', { name: newListName });
-      const newListId = res.data._id;
-      await api.post(`/shopping-lists/${newListId}/items`, selectedItem);
-      alert(`✅ Created "${newListName}" and added item!`);
-      setModalOpen(false);
-    } catch (err) {
-      alert("Failed to create list.");
-    } finally {
-      setAddingToList(false);
-    }
-  };
+  if (loading) return <LoadingScreen strategy={strategy} />;
+  if (error) return <ErrorScreen error={error} onRetry={generateRecipe} onBack={() => navigate('/dashboard')} />;
 
-  // --- LOADING STATE ---
-  if (loading) {
-    return (
-      <div className="loading-screen">
-        <div className="loading-icon-container">
-            <div className="loading-glow"></div>
-            <ChefHat className="loading-chef-icon" />
-        </div>
-        <h2 className="text-2xl font-bold mt-6">The AI Chef is Cooking...</h2>
-        <p className="text-slate-500 mt-2">Analyzing your pantry for {recipe ? 'another' : 'the best'} {strategy === 'health' ? 'healthy' : 'waste-saving'} meal.</p>
-      </div>
-    );
-  }
-
-  // --- ERROR STATE ---
-  if (error) {
-    return (
-      <div className="error-screen">
-        <div className="error-card">
-          <h3 className="font-bold text-xl mb-2">Oops!</h3>
-          <p className="mb-6">{error}</p>
-          <div className="error-actions">
-            <button onClick={() => navigate('/dashboard')} className="glass-btn btn-back" style={{borderRadius: '0.75rem', padding: '0.5rem 1.5rem'}}>Go Back</button>
-            <button onClick={generateRecipe} className="btn-regenerate" style={{backgroundColor: '#ef4444', color: 'white'}}>
-              <RefreshCw className="w-4 h-4"/> Try Again
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // --- MAIN CONTENT ---
   return (
-    <div className="recipe-page">
+    <div className="rs-page">
       
-      {/* HEADER IMAGE */}
-      <div className="hero-container">
-        <div className="hero-overlay"></div>
-        <img src={recipe.image} alt={recipe.title} className="hero-image" />
+      {/* HEADER HERO */}
+      <div className="rs-hero">
+        <div className="rs-hero-overlay"></div>
+        <img src={recipe.image} alt={recipe.title} className="rs-hero-img" />
         
-        <div className="hero-content">
-          
-          {/* TOP NAV BUTTONS */}
-          <div className="nav-bar">
-             <button onClick={() => navigate('/dashboard')} className="glass-btn btn-back group">
-                <ArrowLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
-             </button>
+        {/* Nav */}
+        <div className="rs-nav-bar">
+           <button onClick={() => navigate('/dashboard')} className="rs-btn-glass rs-btn-back">
+              <ArrowLeft size={24} />
+           </button>
+           <button onClick={generateRecipe} className="rs-btn-glass rs-btn-regen group">
+              <RefreshCw size={16} className="group-hover:rotate-180 transition-transform duration-500" />
+              <span>Try Next</span>
+           </button>
+        </div>
 
-             <button onClick={generateRecipe} className="glass-btn btn-regenerate group">
-                <RefreshCw className="w-4 h-4 spin-icon" />
-                <span>Don't like it? Try Next</span>
-             </button>
+        {/* Title Content */}
+        <div className="rs-hero-content">
+          <div className={`rs-badge ${strategy === 'health' ? 'rs-badge-health' : 'rs-badge-waste'}`}>
+             {strategy === 'health' ? <Heart size={12} /> : <Leaf size={12} />}
+             {strategy === 'health' ? "Health Optimized" : "Waste Saver"}
           </div>
+          <h1 className="rs-title">{recipe.title}</h1>
           
-          {/* TITLE & BADGES */}
-          <div className="title-wrapper">
-            <div className={`strategy-badge ${strategy === 'health' ? 'badge-health' : 'badge-waste'}`}>
-              {strategy === 'health' ? <Heart className="w-3 h-3" /> : <Leaf className="w-3 h-3" />}
-              {strategy === 'health' ? "Health Optimized" : "Waste Saver"}
-            </div>
-            
-            <h1 className="recipe-title">{recipe.title}</h1>
-            
-            <div className="recipe-meta">
-              <span className="meta-item"><Clock className="w-4 h-4 text-blue-400" /> {recipe.time}</span>
-              <span className="meta-item"><BarChart className="w-4 h-4 text-orange-400" /> {recipe.difficulty}</span>
-              <span className="meta-item">🔥 {recipe.nutrition.calories}</span>
-            </div>
+          <div className="rs-meta-row">
+            <span className="rs-meta-pill"><Clock size={16} className="text-blue-400" /> {recipe.time}</span>
+            <span className="rs-meta-pill"><BarChart size={16} className="text-orange-400" /> {recipe.difficulty}</span>
+            <span className="rs-meta-pill text-yellow-400">🔥 {recipe.nutrition.calories} kcal</span>
           </div>
         </div>
       </div>
 
-      <div className="content-grid">
+      {/* MAIN CONTENT GRID */}
+      <div className="rs-grid">
         
-        {/* LEFT COLUMN: MACROS & INSTRUCTIONS */}
-        <div className="col-main space-y-8">
-          
-          {/* Nutrition Cards */}
-          <div className="glass-card nutrition-grid">
-             <div className="macro-box">
-               <div className="label">Protein</div>
-               <div className="value" style={{color: '#60a5fa'}}>{recipe.nutrition.protein}</div>
-             </div>
-             <div className="macro-box">
-               <div className="label">Carbs</div>
-               <div className="value" style={{color: '#34d399'}}>{recipe.nutrition.carbs}</div>
-             </div>
-             <div className="macro-box">
-               <div className="label">Fats</div>
-               <div className="value" style={{color: '#facc15'}}>{recipe.nutrition.fat}</div>
-             </div>
-             <div className="macro-box">
-               <div className="label">Used</div>
-               <div className="value" style={{color: '#c084fc'}}>{recipe.usedIngredientCount} items</div>
-             </div>
-          </div>
+        {/* Left Column */}
+        <div className="space-y-6">
+           {/* Nutrition */}
+           <div className="rs-card rs-macro-grid">
+             <div><div className="rs-macro-label">Protein</div><div className="rs-macro-val text-blue-400">{recipe.nutrition.protein}</div></div>
+             <div><div className="rs-macro-label">Carbs</div><div className="rs-macro-val text-emerald-400">{recipe.nutrition.carbs}</div></div>
+             <div><div className="rs-macro-label">Fats</div><div className="rs-macro-val text-yellow-400">{recipe.nutrition.fat}</div></div>
+             <div><div className="rs-macro-label">Used Items</div><div className="rs-macro-val text-purple-400">{recipe.usedIngredientCount}</div></div>
+           </div>
 
-          {/* Instructions */}
-          <div className="glass-card">
-            <h3 className="section-header">
-              <ChefHat className="w-5 h-5 text-orange-400" /> Step-by-Step Instructions
-            </h3>
-            <div className="instructions-text">
-              {recipe.instructions}
-            </div>
-          </div>
+           {/* Instructions */}
+           <div className="rs-card">
+             <h3 className="rs-header">
+               <ChefHat className="text-orange-400" /> Instructions
+             </h3>
+             <div className="rs-text-body">{recipe.instructions}</div>
+           </div>
         </div>
 
-        {/* RIGHT COLUMN: INGREDIENTS */}
-        <div className="col-side">
-          <div className="glass-card ingredients-sticky">
+        {/* Right Column (Sticky Ingredients) */}
+        <div className="relative">
+          <div className="sticky top-6 space-y-6">
             
-            {/* 1. FROM YOUR PANTRY */}
-            <h3 className="section-header" style={{border: 'none', marginBottom: '1rem'}}>
-              <Check className="w-5 h-5 text-emerald-400" /> From Your Pantry
-            </h3>
-            
-            <div style={{ marginBottom: '2rem' }}>
-              {recipe.usedIngredients && recipe.usedIngredients.length > 0 ? (
-                recipe.usedIngredients.map((item, idx) => (
-                  <div key={idx} className="ingredient-item pantry-item">
-                     <img src={item.image} alt={item.name} className="ingredient-img" />
-                     <div className="flex-1 ingredient-info">
-                        <div className="name" style={{color: '#d1fae5'}}>{item.name}</div>
-                        <div className="amount" style={{color: '#34d399'}}>{item.amount} {item.unit}</div>
+            {/* Pantry Items */}
+            <div className="rs-card p-4">
+               <h3 className="rs-header border-none mb-2 pb-0 text-base">
+                 <Check className="text-emerald-400" size={18} /> Pantry Items
+               </h3>
+               <div className="rs-ing-list">
+                 {recipe.usedIngredients?.length > 0 ? (
+                   recipe.usedIngredients.map((item, i) => (
+                     <div key={i} className="rs-ing-item rs-ing-pantry">
+                       <img src={item.image} className="rs-ing-img" alt={item.name}/>
+                       <div className="flex-1">
+                          <div className="font-bold text-sm text-emerald-100 capitalize">{item.name}</div>
+                          <div className="text-xs text-emerald-400">{item.amount} {item.unit}</div>
+                       </div>
+                       <div className="bg-emerald-500 rounded-full p-1"><Check size={10} className="text-white"/></div>
                      </div>
-                     <div className="check-badge">
-                       <Check className="w-3 h-3" />
-                     </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-sm text-slate-500 italic px-2">No pantry items used.</div>
-              )}
+                   ))
+                 ) : <div className="text-sm text-slate-500 italic px-2">No pantry items used.</div>}
+               </div>
             </div>
 
-            {/* 2. MISSING ITEMS / SHOPPING LIST */}
-            <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1.5rem' }}>
-              <h3 className="text-lg font-bold mb-1 flex items-center gap-2">
-                <ShoppingCart className="w-5 h-5 text-blue-400" /> Missing Items
-              </h3>
-              <p className="text-xs text-slate-500 mb-4">Click + to add to your shopping list.</p>
-
-              <div>
-                {recipe.shoppingList && recipe.shoppingList.length > 0 ? (
-                  recipe.shoppingList.map((item, idx) => (
-                    <div key={idx} className="ingredient-item missing-item group">
-                      <div className="flex items-center gap-3">
-                        <img src={item.image} alt={item.name} className="ingredient-img" />
-                        <div className="ingredient-info">
-                          <div className="name text-slate-200 group-hover:text-white transition-colors">{item.name}</div>
-                          <div className="amount">{item.amount} {item.unit}</div>
+            {/* Missing Items */}
+            <div className="rs-card p-4">
+               <h3 className="rs-header border-none mb-2 pb-0 text-base">
+                 <ShoppingCart className="text-blue-400" size={18} /> Missing Items
+               </h3>
+               <div className="rs-ing-list">
+                 {recipe.shoppingList?.length > 0 ? (
+                   recipe.shoppingList.map((item, i) => (
+                     <div key={i} className="rs-ing-item rs-ing-missing group">
+                        <div className="flex items-center gap-3">
+                          <img src={item.image} className="rs-ing-img" alt={item.name}/>
+                          <div>
+                            <div className="font-bold text-sm text-slate-200 capitalize group-hover:text-white">{item.name}</div>
+                            <div className="text-xs text-slate-500">{item.amount} {item.unit}</div>
+                          </div>
                         </div>
-                      </div>
-                      <button 
-                        onClick={() => openAddModal(item)}
-                        className="btn-add-item"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-sm text-emerald-400 italic font-medium px-2">🎉 No missing ingredients!</div>
-                )}
-              </div>
+                        <button onClick={() => openAddModal(item)} className="rs-btn-add">
+                          <Plus size={16} />
+                        </button>
+                     </div>
+                   ))
+                 ) : <div className="text-sm text-emerald-400 italic font-bold">Nothing to buy!</div>}
+               </div>
             </div>
 
           </div>
         </div>
+
       </div>
 
-      {/* --- ADD TO LIST MODAL --- */}
-      {modalOpen && selectedItem && (
-        <div className="modal-overlay">
-          <div className="modal-content animate-fade-in">
-            <button onClick={() => setModalOpen(false)} className="modal-close">
-              <X className="w-5 h-5"/>
-            </button>
-            <h3 className="font-bold">Add to Shopping List</h3>
-            <p className="text-sm text-slate-400 mb-6">Where should we save <span className="font-bold text-blue-400">{selectedItem.name}</span>?</p>
-            
-            {/* Existing Lists */}
-            {userLists.length > 0 && (
-              <div className="list-scroll-area custom-scrollbar">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1 mb-2 block">Your Lists</label>
-                {userLists.map(list => (
-                  <button 
-                    key={list._id}
-                    disabled={addingToList}
-                    onClick={() => handleAddToList(list._id, list.name)}
-                    className="list-btn group"
-                  >
-                    <span className="font-medium group-hover:text-blue-400">{list.name}</span>
-                    <Plus className="w-4 h-4 group-hover:text-blue-400" />
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Create New List */}
-            <div className="new-list-form">
-              <label className="text-xs font-bold text-slate-500 uppercase mb-2 block ml-1">Create New List</label>
-              <div className="input-row">
-                <input 
-                  type="text" 
-                  placeholder="e.g. Walmart Run" 
-                  className="modal-input"
-                  value={newListName}
-                  onChange={(e) => setNewListName(e.target.value)}
-                />
-                <button 
-                  onClick={handleCreateAndAdd}
-                  disabled={!newListName || addingToList}
-                  className="btn-create"
-                >
-                  {addingToList ? <Loader className="w-4 h-4 animate-spin"/> : "Create"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <AddToListModal 
+        isOpen={modalOpen} 
+        onClose={() => setModalOpen(false)} 
+        selectedItem={selectedItem} 
+        userLists={userLists} 
+        onCreate={handleAddToList} 
+      />
     </div>
   );
 };
