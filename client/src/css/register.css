@@ -87,16 +87,14 @@
   .logo-wrapper {
     display: flex;
     align-items: center;
-    justify-content: center;
     gap: 0.75rem;
     margin-bottom: 1rem;
   }
   
   .logo-icon {
-    background: linear-gradient(to top right, #2563eb, #6366f1); /* blue to indigo */
-    padding: 0.625rem;
+    background: linear-gradient(to top right, #063a29, #2dd4bf);
+    padding: 0.6rem;
     border-radius: 0.75rem;
-    box-shadow: 0 10px 15px -3px rgba(30, 58, 138, 0.4);
   }
   
   .app-title {
@@ -177,7 +175,7 @@
     color: var(--blue-primary);
   }
   
-  .form-input {
+  .input {
     width: 100%;
     padding: 0.75rem;
     padding-left: 3rem; /* Space for icon */
@@ -189,15 +187,15 @@
     outline: none;
   }
   
-  .form-input.no-icon {
+  .input.no-icon {
     padding-left: 0.75rem;
   }
   
-  .form-input::placeholder {
+  .input::placeholder {
     color: #475569; /* slate-600 */
   }
   
-  .form-input:focus {
+  .input:focus {
     border-color: var(--blue-primary);
     background-color: rgba(0, 0, 0, 0.6);
   }

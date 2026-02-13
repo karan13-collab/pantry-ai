@@ -89,7 +89,7 @@ const ForgotPassword = () => {
                     placeholder="Enter your email" 
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="form-input" 
+                    className="input" 
                     required 
                   />
                </div>
@@ -126,7 +126,7 @@ const ForgotPassword = () => {
                     placeholder="Enter new password" 
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="form-input" 
+                    className="input" 
                     required 
                   />
                </div>

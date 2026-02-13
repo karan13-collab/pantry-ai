@@ -137,7 +137,7 @@ const Register = () => {
                           name="householdName" 
                           placeholder="e.g. The Penthouse" 
                           onChange={onChange} 
-                          className="form-input no-icon" 
+                          className="input no-icon" 
                           required={formData.householdAction === 'create'}
                         />
                       </div>
@@ -149,7 +149,7 @@ const Register = () => {
                           name="joinCode" 
                           placeholder="Enter 6-Digit Code" 
                           onChange={onChange} 
-                          className="form-input no-icon code-input" 
+                          className="input no-icon code-input" 
                           maxLength={6} 
                           required={formData.householdAction === 'join'}
                         />
@@ -166,22 +166,22 @@ const Register = () => {
                 <div style={{ display: 'grid', gap: '0.75rem' }}>
                   <div className="input-group">
                     <User className="input-icon"/>
-                    <input type="text" name="username" placeholder="Username" onChange={onChange} className="form-input" required />
+                    <input type="text" name="username" placeholder="Username" onChange={onChange} className="input" required />
                   </div>
                   <div className="input-group">
                     <Mail className="input-icon"/>
-                    <input type="email" name="email" placeholder="Email Address" onChange={onChange} className="form-input" required />
+                    <input type="email" name="email" placeholder="Email Address" onChange={onChange} className="input" required />
                   </div>
                   <div className="input-group">
                     {/* Reusing Lock icon concept or simple input for password */}
-                    <input type="password" name="password" placeholder="Password" onChange={onChange} className="form-input no-icon" required />
+                    <input type="password" name="password" placeholder="Password" onChange={onChange} className="input no-icon" required />
                   </div>
                 </div>
 
                 {/* Age / Gender */}
                 <div className="form-grid-2" style={{ marginTop: '0.75rem' }}>
-                  <input type="number" name="age" placeholder="Age" onChange={onChange} className="form-input no-icon" required />
-                  <select name="gender" onChange={onChange} className="form-input form-select no-icon">
+                  <input type="number" name="age" placeholder="Age" onChange={onChange} className="input no-icon" required />
+                  <select name="gender" onChange={onChange} className="input form-select no-icon">
                     <option value="male">Male</option><option value="female">Female</option>
                   </select>
                 </div>
@@ -190,11 +190,11 @@ const Register = () => {
                 <div className="form-grid-2" style={{ marginTop: '0.75rem' }}>
                   <div className="input-group">
                     <div className="input-icon"><Ruler className="w-4 h-4"/></div>
-                    <input type="number" name="height" placeholder="Height (cm)" onChange={onChange} className="form-input" required />
+                    <input type="number" name="height" placeholder="Height (cm)" onChange={onChange} className="input" required />
                   </div>
                   <div className="input-group">
                     <div className="input-icon"><Weight className="w-4 h-4"/></div>
-                    <input type="number" name="weight" placeholder="Weight (kg)" onChange={onChange} className="form-input" required />
+                    <input type="number" name="weight" placeholder="Weight (kg)" onChange={onChange} className="input" required />
                   </div>
                 </div>
             </div>
