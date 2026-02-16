@@ -2,29 +2,29 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, Key, ArrowRight, Loader, CheckCircle, AlertTriangle } from 'lucide-react';
 import api from '../services/api';
-import '../css/ForgotPassword.css'; // Import the CSS file
+import '../css/ForgotPassword.css';
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
+  const [message, setMessage] = useState({ type: '', text: '' }); 
 
-  const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState('');
-  const [newPassword, setNewPassword] = useState('');
+  const [formData, setFormData] = useState({ email: '', otp: '', newPassword: '' });
+
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleRequestOtp = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setMessage({ type: '', text: '' });
+    
     try {
-      await api.post('/auth/forgot-password', { email });
+      await api.post('/auth/forgot-password', { email: formData.email });
       setStep(2);
-      setSuccessMsg(`Code sent to ${email}`);
+      setMessage({ type: 'success', text: `Code sent to ${formData.email}` });
     } catch (err) {
-      setError(err.response?.data?.msg || "Failed to send code");
+      setMessage({ type: 'error', text: err.response?.data?.msg || "Failed to send code" });
     } finally {
       setLoading(false);
     }
@@ -33,113 +33,111 @@ const ForgotPassword = () => {
   const handleResetPassword = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+    setMessage({ type: '', text: '' });
+
     try {
-      await api.post('/auth/reset-password', { email, otp, newPassword });
-      setSuccessMsg("Password reset successfully! Redirecting...");
+      await api.post('/auth/reset-password', formData);
+      setMessage({ type: 'success', text: "Password reset successfully! Redirecting..." });
       setTimeout(() => navigate('/'), 2000);
     } catch (err) {
-      setError(err.response?.data?.msg || "Failed to reset password");
+      setMessage({ type: 'error', text: err.response?.data?.msg || "Failed to reset password" });
       setLoading(false);
     }
   };
 
   return (
-    <div className="forgot-password-page">
-      
+    <div className="fp-container">
       {/* Background FX */}
-      <div className="bg-gradient"></div>
-      <div className="bg-texture"></div>
+      <div className="fp-bg-gradient"></div>
+      <div className="fp-bg-texture"></div>
 
-      <div className="password-card">
+      <div className="fp-card">
         
-        <div className="card-header">
-          <div className="icon-wrapper">
-             {step === 1 ? <Key className="w-8 h-8 text-emerald-400" /> : <Lock className="w-8 h-8 text-emerald-400" />}
+        {/* Header */}
+        <div className="fp-header">
+          <div className="fp-icon-wrapper">
+             {step === 1 ? <Key className="text-emerald-400" size={32} /> : <Lock className="text-emerald-400" size={32} />}
           </div>
-          <h2 className="title">
-            {step === 1 ? "Forgot Password?" : "Reset Password"}
-          </h2>
-          <p className="subtitle">
-            {step === 1 ? "No worries, we'll send you OTP to reset password." : "Create a new secure password."}
+          <h2 className="fp-title">{step === 1 ? "Forgot Password?" : "Reset Password"}</h2>
+          <p className="fp-subtitle">
+            {step === 1 ? "We'll send you an OTP to reset your password." : "Create a new secure password."}
           </p>
         </div>
 
-        {error && (
-          <div className="alert-box alert-error">
-            <AlertTriangle className="w-4 h-4"/> {error}
+        {/* Unified Alert Component */}
+        {message.text && (
+          <div className={`fp-alert ${message.type === 'error' ? 'fp-alert-error' : 'fp-alert-success'}`}>
+            {message.type === 'error' ? <AlertTriangle size={16}/> : <CheckCircle size={16}/>} 
+            {message.text}
           </div>
         )}
 
-        {successMsg && step === 2 && !error && (
-          <div className="alert-box alert-success">
-            <CheckCircle className="w-4 h-4"/> {successMsg}
-          </div>
-        )}
-
-        {/* --- FORM STEP 1: ENTER EMAIL --- */}
+        {/* --- STEP 1 FORM --- */}
         {step === 1 && (
           <form onSubmit={handleRequestOtp}>
-            <div className="form-group">
-               <label className="input">Email Address</label>
-               <div className="input-wrapper">
-                  <Mail className="input-icon"/>
+            <div className="mb-6">
+               <label className="fp-label">Email Address</label>
+               <div className="fp-input-group">
+                  <Mail className="fp-input-icon"/>
                   <input 
+                    name="email"
                     type="email" 
                     placeholder="Enter your email" 
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="input" 
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="fp-input" 
                     required 
                   />
                </div>
             </div>
 
-            <button type="submit" disabled={loading} className="submit-btn">
-              {loading ? <Loader className="w-5 h-5 animate-spin"/> : <>Send Reset Code <ArrowRight className="w-5 h-5"/></>}
+            <button type="submit" disabled={loading} className="fp-btn">
+              {loading ? <Loader className="animate-spin" size={20}/> : <>Send Reset Code <ArrowRight size={20}/></>}
             </button>
           </form>
         )}
 
-        {/* --- FORM STEP 2: VERIFY & NEW PASS --- */}
+        {/* --- STEP 2 FORM --- */}
         {step === 2 && (
           <form onSubmit={handleResetPassword}>
-             <div className="form-group">
-               <label className="input">Verification Code</label>
+             <div className="mb-6">
+               <label className="fp-label">Verification Code</label>
                <input 
+                  name="otp"
                   type="text" 
                   placeholder="000000" 
                   maxLength={6}
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
-                  className="otp-input" 
+                  value={formData.otp}
+                  onChange={handleChange}
+                  className="fp-input fp-input-otp" 
                   required 
                 />
              </div>
 
-             <div className="form-group">
-               <label className="input">New Password</label>
-               <div className="input-wrapper">
-                  <Lock className="input-icon"/>
+             <div className="mb-6">
+               <label className="fp-label">New Password</label>
+               <div className="fp-input-group">
+                  <Lock className="fp-input-icon"/>
                   <input 
+                    name="newPassword"
                     type="password" 
                     placeholder="Enter new password" 
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="input" 
+                    value={formData.newPassword}
+                    onChange={handleChange}
+                    className="fp-input" 
                     required 
                   />
                </div>
              </div>
 
-             <button type="submit" disabled={loading} className="submit-btn">
-               {loading ? <Loader className="w-5 h-5 animate-spin"/> : "Reset Password"}
+             <button type="submit" disabled={loading} className="fp-btn">
+               {loading ? <Loader className="animate-spin" size={20}/> : "Reset Password"}
              </button>
           </form>
         )}
 
-        <div className="footer-link-container">
-          <Link to="/" className="back-link">
+        <div className="mt-8 text-center">
+          <Link to="/" className="text-sm text-gray-500 hover:text-white transition-colors">
             ← Back to Login
           </Link>
         </div>
