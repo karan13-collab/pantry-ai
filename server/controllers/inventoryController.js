@@ -96,7 +96,7 @@ const generateRecipe = async (req, res) => {
       let bmr = (userProfile.gender === 'male') ? baseCalc + 5 : baseCalc - 161;
       const activityMap = { 'sedentary': 1.2, 'light': 1.375, 'moderate': 1.55, 'active': 1.725 };
       const dailyCalories = Math.round(bmr * (activityMap[userProfile.activityLevel] || 1.2));
-      const targetCalories = Math.round(dailyCalories * 0.35); // 35% for one meal
+      const targetCalories = Math.round(dailyCalories * 0.35); 
 
       const response = await axios.get(`https://api.spoonacular.com/recipes/complexSearch`, {
         params: {

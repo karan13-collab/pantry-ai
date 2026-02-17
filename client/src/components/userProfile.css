@@ -1,6 +1,6 @@
 :root {
     --prof-bg-dark: #020617;
-    --prof-card-bg: rgba(15, 23, 42, 0.65); /* slate-900/65 */
+    --prof-card-bg: rgba(15, 23, 42, 0.65); 
     --prof-border: rgba(255, 255, 255, 0.1);
     --prof-text-main: #e2e8f0;
     --prof-text-muted: #94a3b8;
@@ -15,16 +15,14 @@
     --prof-pink: #ec4899;
   }
   
-  /* === Layout === */
   .profile-container {
-    max-width: 64rem; /* 5xl */
+    max-width: 64rem; 
     margin: 0 auto;
     padding-bottom: 3rem;
     color: var(--prof-text-main);
     animation: fadeIn 0.5s ease-out;
   }
-  
-  /* === Loading & Error === */
+
   .profile-loading {
     display: flex;
     flex-direction: column;
@@ -59,7 +57,6 @@
     backdrop-filter: blur(4px);
   }
   
-  /* === Toast Notification === */
   .profile-toast {
     position: fixed;
     top: 2.5rem;
@@ -88,7 +85,6 @@
   .toast-close { background: none; border: none; color: var(--prof-text-muted); cursor: pointer; margin-left: 1rem; }
   .toast-close:hover { color: white; }
   
-  /* === Header Card === */
   .profile-header {
     background-color: var(--prof-card-bg);
     backdrop-filter: blur(12px);
@@ -170,7 +166,6 @@
   }
   .btn-edit-profile:hover { background-color: rgba(255, 255, 255, 0.1); color: white; }
   
-  /* === Stats Grid === */
   .profile-stats-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -193,7 +188,6 @@
   }
   .stat-card:hover { transform: scale(1.05); }
   
-  /* Stat Variants */
   .stat-purple { background-color: rgba(168, 85, 247, 0.1); border-color: rgba(168, 85, 247, 0.2); }
   .stat-purple .stat-icon { color: #c084fc; }
   
@@ -217,7 +211,6 @@
   .stat-label { font-size: 0.75rem; font-weight: 700; color: var(--prof-text-muted); text-transform: uppercase; }
   .stat-value { font-size: 1.25rem; font-weight: 900; color: white; margin-top: 0.25rem; text-transform: capitalize; }
   
-  /* === Generic Card === */
   .profile-card {
     background-color: var(--prof-card-bg);
     backdrop-filter: blur(12px);
@@ -228,7 +221,6 @@
     margin-bottom: 1.5rem;
   }
   
-  /* === Household Section === */
   .household-header {
     display: flex;
     flex-direction: column;
@@ -248,7 +240,6 @@
   .btn-rename-icon { color: var(--prof-text-muted); padding: 0.25rem; border-radius: 0.25rem; cursor: pointer; border: none; background: transparent; transition: color 0.2s; }
   .btn-rename-icon:hover { color: #818cf8; background-color: rgba(255, 255, 255, 0.05); }
   
-  /* Rename Input */
   .rename-group { display: flex; align-items: center; gap: 0.5rem; animation: fadeIn 0.2s; }
   .rename-input {
     background-color: rgba(0, 0, 0, 0.4);
@@ -264,7 +255,6 @@
   .btn-save-rename { background-color: rgba(16, 185, 129, 0.2); color: #34d399; padding: 0.5rem; border-radius: 0.5rem; border: 1px solid rgba(16, 185, 129, 0.2); cursor: pointer; }
   .btn-cancel-rename { background-color: rgba(239, 68, 68, 0.2); color: #f87171; padding: 0.5rem; border-radius: 0.5rem; border: 1px solid rgba(239, 68, 68, 0.2); cursor: pointer; }
   
-  /* Join Code */
   .join-code-box {
     display: flex;
     align-items: center;
@@ -279,7 +269,6 @@
   
   .no-household { font-size: 0.75rem; color: var(--prof-text-muted); background: rgba(255,255,255,0.05); padding: 0.25rem 0.75rem; border-radius: 999px; border: 1px solid var(--prof-border); }
   
-  /* Members Grid */
   .members-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
   @media(min-width: 640px) { .members-grid { grid-template-columns: repeat(2, 1fr); } }
   @media(min-width: 768px) { .members-grid { grid-template-columns: repeat(3, 1fr); } }
@@ -315,7 +304,6 @@
   .you-tag { font-size: 0.625rem; background-color: rgba(99, 102, 241, 0.2); color: #a5b4fc; padding: 0.1rem 0.4rem; border-radius: 999px; border: 1px solid rgba(99, 102, 241, 0.2); }
   .member-email { font-size: 0.75rem; color: var(--prof-text-muted); overflow: hidden; text-overflow: ellipsis; }
   
-  /* Empty Household */
   .empty-household {
     padding: 2rem;
     background-color: rgba(0, 0, 0, 0.2);
@@ -328,7 +316,6 @@
     justify-content: center;
   }
   
-  /* === Details Grid === */
   .details-grid { display: grid; gap: 1.5rem; }
   @media(min-width: 768px) { .details-grid { grid-template-columns: repeat(2, 1fr); } }
   
@@ -342,7 +329,6 @@
     margin-bottom: 1rem;
   }
   
-  /* Preference Rows */
   .pref-row {
     display: flex;
     justify-content: space-between;
@@ -381,7 +367,6 @@
   .detail-val { color: #e2e8f0; font-weight: 700; display: flex; align-items: center; gap: 0.25rem; text-transform: capitalize; }
   .status-active { font-size: 0.75rem; background-color: rgba(16, 185, 129, 0.1); color: #34d399; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-weight: 700; text-transform: uppercase; border: 1px solid rgba(16, 185, 129, 0.2); }
   
-  /* === Edit Modal === */
   .profile-modal-overlay {
     position: fixed;
     inset: 0;
@@ -451,7 +436,6 @@
   }
   .profile-btn-primary:hover { background-color: #059669; transform: scale(1.02); }
   
-  /* Animations */
   @keyframes spin { 100% { transform: rotate(360deg); } }
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }

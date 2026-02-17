@@ -1,4 +1,3 @@
-
 :root {
   --bg-dark: #030712; 
   --bg-card: #111827; 
@@ -112,7 +111,6 @@
 
 .forgot_password:hover { color: #6ee7b7; }
 
-/* === Inputs === */
 .input_box {
   position: relative;
 }
