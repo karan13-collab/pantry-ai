@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import api from "../services/api";
 import UserProfile from "../components/userProfile";
-import '../css/Dashboard.css';// Ensure this import is correct
+import '../css/Dashboard.css';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -54,7 +54,6 @@ const Dashboard = () => {
     category: "Other",
   });
 
-  // ... (Keep existing useEffect and logic functions exactly as they were) ...
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -191,12 +190,10 @@ const Dashboard = () => {
 
   return (
     <div className="dash-page">
-      {/* Backgrounds */}
       <div className="dash-bg-img"></div>
       <div className="dash-bg-overlay"></div>
 
       <div className="dash-content-wrapper">
-        {/* Notifications */}
         {notification && (
           <div className="dash-toast" style={{ borderColor: notification.type === 'error' ? '#ef4444' : '#10b981' }}>
             {notification.type === "error" ? <XCircle className="w-5 h-5 text-red-400" /> : <CheckCircle className="w-5 h-5 text-emerald-400" />}
@@ -204,12 +201,11 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Navbar */}
         <nav className="dash-nav">
           <div className="dash-nav-container">
             <div className="dash-brand" onClick={() => setActiveTab("pantry")}>
               <div className="dash-brand-icon">
-                <Package className="h-6 w-6 text-emerald-400" />
+                <ChefHat className="w-6 h-6 text-white" />
               </div>
               <span className="dash-brand-title">PantryAI</span>
             </div>
@@ -236,7 +232,6 @@ const Dashboard = () => {
           </div>
         </nav>
 
-        {/* Main Content */}
         <main className="dash-main">
           <div className="dash-tabs">
             <div className="dash-tab-box">
@@ -251,7 +246,6 @@ const Dashboard = () => {
 
           {activeTab === "pantry" && (
             <div className="dash-fade-in">
-              {/* Alert Widget */}
               {alertItems.length > 0 && (
                 <div className="dash-alert-widget">
                   <div className="dash-alert-header">
@@ -275,7 +269,6 @@ const Dashboard = () => {
                 </div>
               )}
 
-              {/* Header & Search */}
               <div className="dash-header-section">
                 <div>
                   <h1 className="dash-page-title">{household ? household.name : "My"} Inventory</h1>
@@ -296,7 +289,6 @@ const Dashboard = () => {
                 </div>
               </div>
 
-              {/* Quick Add Form */}
               <div className="dash-quick-add">
                 <div className="dash-quick-title">
                   <div className="dash-brand-icon" style={{background: 'rgba(16, 185, 129, 0.1)', borderColor: 'rgba(16, 185, 129, 0.2)'}}>
@@ -337,11 +329,10 @@ const Dashboard = () => {
                 </form>
               </div>
 
-              {/* Inventory Table */}
               <div className="dash-table-card">
                 <div className="dash-table-header">
                   <h3 style={{fontSize:'1.25rem', fontWeight:'bold', color:'white', display:'flex', alignItems:'center', gap:'0.5rem'}}>
-                    <ChefHat className="text-orange-400" /> Pantry Stock
+                    <ChefHat className="w-6 h-6 text-white" /> Pantry Stock
                   </h3>
                   <button onClick={handleOpenChef} disabled={items.length === 0} className="dash-ai-btn">
                     <ChefHat className="w-4 h-4" /> AI Suggestion
@@ -402,7 +393,6 @@ const Dashboard = () => {
           )}
         </main>
 
-        {/* --- MODALS --- */}
         {showStrategyModal && (
           <div className="dash-modal-overlay">
             <div className="dash-modal dash-fade-in">

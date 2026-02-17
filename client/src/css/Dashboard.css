@@ -1,14 +1,11 @@
-/* Dashboard.css */
-
 :root {
-    /* Dark Theme Palette */
-    --dash-bg-dark: #020617;       /* slate-950 */
-    --dash-card-bg: rgba(17, 24, 39, 0.6); /* gray-900/60 */
-    --dash-border: rgba(255, 255, 255, 0.1);
-    --dash-text-main: #e2e8f0;     /* slate-200 */
-    --dash-text-muted: #94a3b8;    /* slate-400 */
     
-    /* Brand Colors */
+    --dash-bg-dark: #020617;       
+    --dash-card-bg: rgba(17, 24, 39, 0.6); 
+    --dash-border: rgba(255, 255, 255, 0.1);
+    --dash-text-main: #e2e8f0;     
+    --dash-text-muted: #94a3b8;    
+    
     --dash-emerald: #10b981;
     --dash-emerald-hover: #059669;
     --dash-emerald-glow: rgba(16, 185, 129, 0.1);
@@ -18,7 +15,7 @@
     --dash-blue: #3b82f6;
   }
   
-  /* === Main Layout === */
+ 
   .dash-page {
     min-height: 100vh;
     background-color: var(--dash-bg-dark);
@@ -29,14 +26,14 @@
     flex-direction: column;
   }
   
-  /* Background Layers */
+  
   .dash-bg-img {
     position: fixed;
     inset: 0;
     background-image: url('https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1974&auto=format&fit=crop');
     background-size: cover;
     background-position: center;
-    opacity: 0.4;
+    opacity: 0.8;
     z-index: 0;
   }
   
@@ -55,7 +52,6 @@
     flex-direction: column;
   }
   
-  /* === Navbar === */
   .dash-nav {
     position: sticky;
     top: 0;
@@ -83,10 +79,9 @@
   }
   
   .dash-brand-icon {
-    background: linear-gradient(to bottom right, #1f2937, #000);
-    padding: 0.5rem;
+    background: linear-gradient(to top right, #063a29, #2dd4bf);
+    padding: 0.6rem;
     border-radius: 0.75rem;
-    border: 1px solid var(--dash-border);
   }
   
   .dash-brand-title {
@@ -137,7 +132,7 @@
   
   .dash-nav-btn:hover { color: white; background-color: rgba(255,255,255,0.1); }
   
-  /* === Main Container === */
+  
   .dash-main {
     max-width: 80rem;
     margin: 0 auto;
@@ -145,7 +140,7 @@
     width: 100%;
   }
   
-  /* Tabs */
+
   .dash-tabs {
     display: flex;
     justify-content: center;
@@ -180,7 +175,6 @@
     color: white;
   }
   
-  /* Alerts Widget */
   .dash-alert-widget {
     background-color: rgba(239, 68, 68, 0.05);
     border: 1px solid rgba(239, 68, 68, 0.2);
@@ -220,7 +214,6 @@
     border-radius: 0.75rem;
   }
   
-  /* Header Section */
   .dash-header-section {
     display: flex;
     flex-direction: column;
@@ -262,7 +255,6 @@
     color: var(--dash-text-muted);
   }
   
-  /* Quick Add Form */
   .dash-quick-add {
     background-color: var(--dash-card-bg);
     backdrop-filter: blur(16px);
@@ -336,7 +328,6 @@
   @media(min-width: 768px) { .dash-btn-primary { width: auto; } }
   .dash-btn-primary:hover { background-color: var(--dash-emerald-hover); }
   
-  /* Inventory Table */
   .dash-table-card {
     background-color: var(--dash-card-bg);
     backdrop-filter: blur(16px);
@@ -390,7 +381,7 @@
   .dash-table tr:hover { background-color: rgba(255, 255, 255, 0.05); }
   .dash-table tr:hover td { color: white; }
   
-  /* Status Badges */
+ 
   .dash-status {
     display: inline-flex;
     align-items: center;
@@ -415,7 +406,6 @@
   }
   .dash-btn-icon:hover { color: #f87171; background-color: rgba(239, 68, 68, 0.1); }
   
-  /* Modals */
   .dash-modal-overlay {
     position: fixed;
     inset: 0;
@@ -464,7 +454,6 @@
   }
   .dash-strategy-btn:hover { background-color: rgba(6, 78, 59, 0.3); border-color: rgba(16, 185, 129, 0.3); }
   
-  /* List Modal Items */
   .dash-list-items { max-height: 10rem; overflow-y: auto; margin-bottom: 1rem; display: flex; flex-direction: column; gap: 0.5rem; }
   .dash-list-btn {
     width: 100%;
@@ -480,7 +469,6 @@
   }
   .dash-list-btn:hover { background-color: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.3); }
   
-  /* Notifications */
   .dash-toast {
     position: fixed;
     top: 6rem;

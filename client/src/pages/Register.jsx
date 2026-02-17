@@ -5,7 +5,7 @@ import {
   User, Mail, Loader, Ruler, Weight
 } from 'lucide-react'; 
 import api from '../services/api'; 
-import '../css/register.css'; // Importing the separate CSS file
+import '../css/register.css'; 
 
 const Register = () => {
   const navigate = useNavigate();
@@ -77,7 +77,6 @@ const Register = () => {
       {/* --- BACKGROUND EFFECTS --- */}
       <div className="blob blob-emerald"></div>
       <div className="blob blob-blue"></div>
-      <div className="bg-pattern"></div>
 
       {/* --- CENTERED CARD --- */}
       <div className="register-card">

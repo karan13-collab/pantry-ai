@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
-import { User, Lock, ArrowRight, AlertCircle, ChefHat } from 'lucide-react';
+import { User, Lock, AlertCircle, ChefHat } from 'lucide-react';
 import '../css/login.css'; 
 
 const Login = () => {
@@ -130,7 +130,7 @@ const Login = () => {
             <p className="quote_text">
               "The AI chef suggestions have completely changed how we shop and cook. Less waste, better meals."
             </p>
-            <footer className="quote_author">— Aman</footer>
+            <footer className="quote_author">— Prof. Armando Ruggeri</footer>
           </blockquote>
         </div>
       </div>

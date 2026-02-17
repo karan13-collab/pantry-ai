@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Package, Trash2, Check, Calendar, ShoppingCart, LogOut, Loader, Plus, X, Tag } from 'lucide-react';
+import { Package, Trash2, Check,ChefHat, ShoppingCart, LogOut, Loader, Plus, X } from 'lucide-react';
 import api from '../services/api';
 import '../css/ShoppingList.css';
 
@@ -59,7 +59,7 @@ const ShoppingList = () => {
       <div className="sl-nav-content">
         <div className="sl-nav-logo" onClick={() => navigate('/dashboard')}>
           <div className="sl-icon-box">
-            <Package className="h-6 w-6 text-emerald-400" />
+            <ChefHat className="w-6 h-6 text-white" />
           </div>
           <div>
              <span className="block text-lg font-extrabold text-white leading-none">PantryAI</span>
@@ -225,7 +225,7 @@ const ShoppingList = () => {
                     <div key={item._id} className="sl-item-row group">
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center border border-gray-700">
-                           {item.image ? <img src={item.image} className="w-full h-full object-cover rounded-lg"/> : <Package className="text-gray-500 w-5 h-5"/>}
+                           {item.image ? <img src={item.image} alt="Loading" className="w-full h-full object-cover rounded-lg"/> : <Package className="text-gray-500 w-5 h-5"/>}
                         </div>
                         <div>
                           <div className="font-bold text-gray-200 group-hover:text-white transition-colors">{item.name}</div>
