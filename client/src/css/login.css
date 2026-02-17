@@ -234,7 +234,6 @@
   color: var(--primary-color);
   font-weight: bold;
 }
-/* Animation */
 
 @keyframes fadeInUp {
   from { opacity: 0; transform: translateY(20px); }

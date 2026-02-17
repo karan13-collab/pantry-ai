@@ -9,11 +9,10 @@ const HouseholdSchema = new mongoose.Schema({
   joinCode: { 
     type: String, 
     required: true, 
-    unique: true // Ensures no duplicate codes
+    unique: true  
   },
   members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   
-  // Keep admin required, our Auth Controller handles the "Chicken-Egg" issue
   admin: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'User', 

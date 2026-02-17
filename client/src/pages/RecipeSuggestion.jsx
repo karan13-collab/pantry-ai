@@ -54,7 +54,6 @@ const AddToListModal = ({ isOpen, onClose, selectedItem, userLists, onCreate }) 
         </div>
         <p className="text-sm text-slate-400 mb-6">Where should we save <span className="font-bold text-blue-400">{selectedItem.name}</span>?</p>
         
-        {/* Existing Lists */}
         <div className="max-h-40 overflow-y-auto mb-4 custom-scrollbar">
            {userLists.map(list => (
              <button key={list._id} onClick={() => onCreate(null, list._id, list.name)} className="rs-list-btn group">
@@ -64,7 +63,6 @@ const AddToListModal = ({ isOpen, onClose, selectedItem, userLists, onCreate }) 
            ))}
         </div>
 
-        {/* Create New */}
         <div className="rs-input-group">
           <input 
             type="text" 
@@ -91,7 +89,6 @@ const RecipeSuggestion = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Modal State
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [userLists, setUserLists] = useState([]);
@@ -141,12 +138,11 @@ const RecipeSuggestion = () => {
   return (
     <div className="rs-page">
       
-      {/* HEADER HERO */}
       <div className="rs-hero">
         <div className="rs-hero-overlay"></div>
         <img src={recipe.image} alt={recipe.title} className="rs-hero-img" />
         
-        {/* Nav */}
+        
         <div className="rs-nav-bar">
            <button onClick={() => navigate('/dashboard')} className="rs-btn-glass rs-btn-back">
               <ArrowLeft size={24} />
@@ -157,7 +153,6 @@ const RecipeSuggestion = () => {
            </button>
         </div>
 
-        {/* Title Content */}
         <div className="rs-hero-content">
           <div className={`rs-badge ${strategy === 'health' ? 'rs-badge-health' : 'rs-badge-waste'}`}>
              {strategy === 'health' ? <Heart size={12} /> : <Leaf size={12} />}
@@ -173,12 +168,9 @@ const RecipeSuggestion = () => {
         </div>
       </div>
 
-      {/* MAIN CONTENT GRID */}
       <div className="rs-grid">
         
-        {/* Left Column */}
         <div className="space-y-6">
-           {/* Nutrition */}
            <div className="rs-card rs-macro-grid">
              <div><div className="rs-macro-label">Protein</div><div className="rs-macro-val text-blue-400">{recipe.nutrition.protein}</div></div>
              <div><div className="rs-macro-label">Carbs</div><div className="rs-macro-val text-emerald-400">{recipe.nutrition.carbs}</div></div>
@@ -186,7 +178,6 @@ const RecipeSuggestion = () => {
              <div><div className="rs-macro-label">Used Items</div><div className="rs-macro-val text-purple-400">{recipe.usedIngredientCount}</div></div>
            </div>
 
-           {/* Instructions */}
            <div className="rs-card">
              <h3 className="rs-header">
                <ChefHat className="text-orange-400" /> Instructions
@@ -195,11 +186,9 @@ const RecipeSuggestion = () => {
            </div>
         </div>
 
-        {/* Right Column (Sticky Ingredients) */}
         <div className="relative">
           <div className="sticky top-6 space-y-6">
             
-            {/* Pantry Items */}
             <div className="rs-card p-4">
                <h3 className="rs-header border-none mb-2 pb-0 text-base">
                  <Check className="text-emerald-400" size={18} /> Pantry Items
@@ -220,7 +209,6 @@ const RecipeSuggestion = () => {
                </div>
             </div>
 
-            {/* Missing Items */}
             <div className="rs-card p-4">
                <h3 className="rs-header border-none mb-2 pb-0 text-base">
                  <ShoppingCart className="text-blue-400" size={18} /> Missing Items

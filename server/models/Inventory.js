@@ -13,7 +13,7 @@ const InventorySchema = new mongoose.Schema({
   },
   unit: {
     type: String,
-    enum: ['kg', 'g', 'L', 'ml', 'pcs', 'pack'], // Restrict to specific units
+    enum: ['kg', 'g', 'L', 'ml', 'pcs', 'pack'], 
     default: 'pcs'
   },
   expiryDate: {
@@ -25,7 +25,7 @@ const InventorySchema = new mongoose.Schema({
     enum: ['Vegetable', 'Fruit', 'Dairy', 'Grain', 'Meat', 'Other'],
     default: 'Other'
   },
-  // The "Shared Resource" link
+
   household: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Household',

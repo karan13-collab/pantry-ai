@@ -74,14 +74,11 @@ const Register = () => {
   return (
     <div className="register-page">
       
-      {/* --- BACKGROUND EFFECTS --- */}
       <div className="blob blob-emerald"></div>
       <div className="blob blob-blue"></div>
 
-      {/* --- CENTERED CARD --- */}
       <div className="register-card">
         
-        {/* Header */}
         <div className="header-container">
           <div className="logo-wrapper">
             <div className="logo-icon">
@@ -103,11 +100,9 @@ const Register = () => {
           </div>
         )}
         
-        {/* --- STEP 1: REGISTRATION FORM --- */}
         {step === 1 && (
           <form onSubmit={onRegisterSubmit}>
             
-            {/* 1. HOUSEHOLD SETUP */}
             <div className="section-group">
                 <label className="section-label">Household Setup</label>
                 <div className="form-grid-2">
@@ -157,11 +152,9 @@ const Register = () => {
                 </div>
             </div>
 
-            {/* 2. PERSONAL DETAILS */}
             <div className="section-group">
                 <label className="section-label">Personal Details</label>
                 
-                {/* User/Pass Fields */}
                 <div style={{ display: 'grid', gap: '0.75rem' }}>
                   <div className="input-group">
                     <User className="input-icon"/>
@@ -172,12 +165,10 @@ const Register = () => {
                     <input type="email" name="email" placeholder="Email Address" onChange={onChange} className="input" required />
                   </div>
                   <div className="input-group">
-                    {/* Reusing Lock icon concept or simple input for password */}
                     <input type="password" name="password" placeholder="Password" onChange={onChange} className="input no-icon" required />
                   </div>
                 </div>
 
-                {/* Age / Gender */}
                 <div className="form-grid-2" style={{ marginTop: '0.75rem' }}>
                   <input type="number" name="age" placeholder="Age" onChange={onChange} className="input no-icon" required />
                   <select name="gender" onChange={onChange} className="input form-select no-icon">
@@ -185,7 +176,6 @@ const Register = () => {
                   </select>
                 </div>
                 
-                {/* Height / Weight */}
                 <div className="form-grid-2" style={{ marginTop: '0.75rem' }}>
                   <div className="input-group">
                     <div className="input-icon"><Ruler className="w-4 h-4"/></div>
@@ -198,11 +188,9 @@ const Register = () => {
                 </div>
             </div>
 
-            {/* 3. HEALTH & FITNESS */}
             <div className="section-group">
               <label className="section-label">Health Profile</label>
               
-              {/* Slider */}
               <div className="health-card">
                   <h3 className="health-title orange"><Activity className="w-4 h-4"/> Activity Level</h3>
                   <div>
@@ -219,7 +207,6 @@ const Register = () => {
                   </div>
               </div>
 
-              {/* Allergies */}
               <div className="health-card">
                   <h3 className="health-title red"><AlertTriangle className="w-4 h-4"/> Allergies</h3>
                   <div className="tags-container">
@@ -243,7 +230,6 @@ const Register = () => {
           </form>
         )}
 
-        {/* --- STEP 2: OTP VERIFICATION FORM --- */}
         {step === 2 && (
           <form onSubmit={onVerifySubmit} className="otp-section animate-fade-in" style={{ padding: '2rem 0' }}>
             <div className="otp-icon-container">

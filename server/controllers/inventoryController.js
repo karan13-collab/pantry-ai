@@ -3,7 +3,6 @@ const InventoryItem = require('../models/Inventory');
 const User = require('../models/User'); 
 const axios = require('axios');
 
-// --- 1. GET INVENTORY ---
 const getInventory = async (req, res) => {
   try {
     if (!req.user || !req.user.id) return res.status(200).json([]); 
@@ -12,7 +11,6 @@ const getInventory = async (req, res) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Auto-Cleanup Expired Items
     await InventoryItem.deleteMany({ ...query, expiryDate: { $lt: today } });
 
     const items = await InventoryItem.find(query).sort({ expiryDate: 1 });
@@ -22,7 +20,6 @@ const getInventory = async (req, res) => {
   }
 };
 
-// --- 2. ADD ITEM ---
 const addItem = async (req, res) => {
   try {
     if (!req.user || !req.user.id) return res.status(401).json({ message: "User not authenticated." });
@@ -40,7 +37,6 @@ const addItem = async (req, res) => {
   } catch (error) { res.status(500).json({ message: error.message }); }
 };
 
-// --- 3. DELETE ITEM ---
 const deleteItem = async (req, res) => {
   try {
     const item = await InventoryItem.findById(req.params.id);
@@ -52,13 +48,11 @@ const deleteItem = async (req, res) => {
   } catch (error) { res.status(500).json({ message: error.message }); }
 };
 
-// --- 4. GENERATE RECIPE (OPTIMIZED) ---
 const generateRecipe = async (req, res) => {
   try {
-    const { strategy } = req.body; // 'waste' or 'health'
+    const { strategy } = req.body; 
     const userId = req.user.id;
 
-    // A. Fetch Inventory (ALL items, not just top 15)
     const inventory = await InventoryItem.find({ 
       household: req.user.household, 
       addedBy: userId 
@@ -66,23 +60,20 @@ const generateRecipe = async (req, res) => {
 
     if (inventory.length === 0) return res.status(400).json({ error: "Your pantry is empty!" });
     
-    // Join ALL items for the API query
     const allIngredients = inventory.map(item => item.name).join(',');
 
     let recipeId = null;
     let usedIngredients = [];
     let missedIngredients = [];
 
-    // --- STRATEGY: WASTE (MAXIMIZE FRIDGE) ---
-    // Uses 'findByIngredients' which strictly prioritizes using the most items.
     if (strategy === 'waste') {
       const response = await axios.get(`https://api.spoonacular.com/recipes/findByIngredients`, {
         params: {
           apiKey: process.env.SPOONACULAR_API_KEY,
           ingredients: allIngredients,
           number: 3,
-          ranking: 1, // 1 = Maximize used ingredients, 2 = Minimize missing ingredients
-          ignorePantry: true // Assume user has basics (salt, flour, water)
+          ranking: 1, 
+          ignorePantry: true 
         }
       });
 
@@ -90,22 +81,17 @@ const generateRecipe = async (req, res) => {
         return res.status(404).json({ error: "No recipes found matching your ingredients." });
       }
 
-      // Pick the best match
       const bestMatch = response.data[0];
       recipeId = bestMatch.id;
       usedIngredients = bestMatch.usedIngredients;
       missedIngredients = bestMatch.missedIngredients;
     } 
-    
-    // --- STRATEGY: HEALTH (MACROS) ---
-    // Uses 'complexSearch' to filter by calories/protein.
+
     else {
-      // Fetch User Profile for Macros
       let userProfile = { age: 25, weight: 70, height: 175, gender: 'male', activityLevel: 'sedentary' };
       const dbUser = await User.findById(userId);
       if (dbUser) userProfile = { ...userProfile, ...dbUser.toObject() };
 
-      // Calc BMR & Targets
       const baseCalc = (10 * userProfile.weight) + (6.25 * userProfile.height) - (5 * userProfile.age);
       let bmr = (userProfile.gender === 'male') ? baseCalc + 5 : baseCalc - 161;
       const activityMap = { 'sedentary': 1.2, 'light': 1.375, 'moderate': 1.55, 'active': 1.725 };
@@ -117,7 +103,7 @@ const generateRecipe = async (req, res) => {
           apiKey: process.env.SPOONACULAR_API_KEY,
           includeIngredients: allIngredients,
           number: 3,
-          sort: 'max-used-ingredients', // Try to use pantry, but prioritize health constraints
+          sort: 'max-used-ingredients', 
           maxCalories: targetCalories + 100,
           minProtein: 20,
           fillIngredients: true,
@@ -131,13 +117,10 @@ const generateRecipe = async (req, res) => {
 
       const bestMatch = response.data.results[0];
       recipeId = bestMatch.id;
-      // complexSearch returns these differently, normalizing them:
       usedIngredients = bestMatch.usedIngredients || [];
       missedIngredients = bestMatch.missedIngredients || [];
     }
 
-    // --- C. GET FULL RECIPE DETAILS ---
-    // We have the ID and Ingredients, now get Instructions & Exact Nutrition
     const fullInfoResponse = await axios.get(`https://api.spoonacular.com/recipes/${recipeId}/information`, {
       params: {
         apiKey: process.env.SPOONACULAR_API_KEY,
@@ -147,36 +130,35 @@ const generateRecipe = async (req, res) => {
 
     const fullRecipe = fullInfoResponse.data;
 
-    // --- D. SMART INGREDIENT FIXER ---
-    // Check if "Missing" items are actually in the pantry (Fuzzy Match)
+   
     let finalMissedList = [];
     
     missedIngredients.forEach(missed => {
-        // Does the user have this item?
+     
         const foundInPantry = inventory.find(pantryItem => 
             pantryItem.name.toLowerCase().includes(missed.name.toLowerCase()) || 
             missed.name.toLowerCase().includes(pantryItem.name.toLowerCase())
         );
 
         if (foundInPantry) {
-            // Found it! Move to Used
+
             usedIngredients.push({
                 ...missed,
                 originalName: `${missed.name} (Have: ${foundInPantry.quantity} ${foundInPantry.unit})`
             });
         } else {
-            // Truly missing
+   
             finalMissedList.push(missed);
         }
     });
 
-    // Helper for Nutrition
+
     const getNutrient = (name) => {
       const n = fullRecipe.nutrition?.nutrients?.find(n => n.name === name);
       return n ? `${Math.round(n.amount)}${n.unit}` : "0g";
     };
 
-    // Format Instructions
+
     let finalInstructions = fullRecipe.instructions || "No instructions provided.";
     if (fullRecipe.analyzedInstructions?.length > 0) {
        finalInstructions = fullRecipe.analyzedInstructions[0].steps.map(s => `Step ${s.number}: ${s.step}`).join('\n\n');
@@ -184,18 +166,16 @@ const generateRecipe = async (req, res) => {
        finalInstructions = fullRecipe.summary.replace(/<[^>]*>?/gm, '');
     }
 
-    // Send Response
+
     res.json({
       title: fullRecipe.title,
       image: fullRecipe.image,
       time: `${fullRecipe.readyInMinutes || 30} mins`,
       difficulty: fullRecipe.readyInMinutes > 45 ? "Hard" : "Easy",
       
-      // Counts
       missedIngredientsCount: finalMissedList.length,
       usedIngredientCount: usedIngredients.length,
       
-      // Nutrition
       nutrition: {
         calories: getNutrient("Calories"),
         protein: getNutrient("Protein"),
@@ -203,10 +183,8 @@ const generateRecipe = async (req, res) => {
         fat: getNutrient("Fat")
       },
       
-      // Text
       instructions: finalInstructions,
       
-      // Arrays
       usedIngredients: usedIngredients.map(item => ({
         name: item.name,
         amount: item.amount,
