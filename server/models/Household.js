@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-
 const HouseholdSchema = new mongoose.Schema({
   name: { 
     type: String, 

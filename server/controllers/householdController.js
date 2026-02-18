@@ -8,7 +8,6 @@ const generateJoinCode = () => {
 exports.createHousehold = async (req, res) => {
   try {
     const { name } = req.body;
-
     if (!name) {
       return res.status(400).json({ msg: "Household name is required" });
     }
@@ -38,22 +37,17 @@ exports.createHousehold = async (req, res) => {
 exports.updateHousehold = async (req, res) => {
   try {
     const { name } = req.body;
-
     const household = await Household.findOne({ members: req.user.id });
 
     if (!household) {
       return res.status(404).json({ msg: "Household not found" });
     }
 
-
     if (household.admin.toString() !== req.user.id) {
       return res.status(403).json({ msg: "Not authorized. Only the Admin can rename the household." });
     }
 
-    
     if (name) household.name = name;
-  
-
     await household.save();
     res.json(household);
 

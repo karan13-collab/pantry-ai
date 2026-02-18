@@ -28,7 +28,7 @@ router.post('/', auth, async (req, res) => {
       items: []
     });
     
-    console.log("✅ List created:", newList._id);
+    console.log(" List created:", newList._id);
     res.status(201).json(newList);
   } catch (err) {
     console.error(" Error creating list:", err.message);
@@ -67,7 +67,7 @@ router.post('/:id/items', auth, async (req, res) => {
     }
     
     await list.save();
-    console.log("✅ Item saved successfully");
+    console.log(" Item saved successfully");
     res.json(list);
 
   } catch (err) {

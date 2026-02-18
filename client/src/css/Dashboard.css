@@ -186,7 +186,7 @@
   
   .dash-alert-header {
     padding: 1rem 1.5rem;
-    background-color: rgba(127, 29, 29, 0.2);
+    background-color: rgba(233, 13, 13, 0.2);
     border-bottom: 1px solid rgba(239, 68, 68, 0.1);
     color: #fca5a5;
     font-weight: 700;
@@ -221,7 +221,12 @@
     gap: 1rem;
     margin-bottom: 2rem;
   }
-  @media(min-width: 768px) { .dash-header-section { flex-direction: row; align-items: flex-end; } }
+  @media(min-width: 768px) { 
+    .dash-header-section { 
+      flex-direction: row; 
+      align-items: flex-end; 
+    } 
+  }
   
   .dash-page-title {
     font-size: 2.25rem;
@@ -245,7 +250,8 @@
     color: white;
     outline: none;
   }
-  .dash-search-input:focus { border-color: var(--dash-emerald); }
+  .dash-search-input:focus 
+  { border-color: var(--dash-emerald); }
   
   .dash-search-icon {
     position: absolute;
@@ -359,10 +365,18 @@
     gap: 0.5rem;
     cursor: pointer;
   }
-  .dash-ai-btn:hover { background-color: rgba(249, 115, 22, 0.2); }
+  .dash-ai-btn:hover { 
+    background-color: rgba(249, 115, 22, 0.2); 
+  }
   
-  .dash-table-wrap { overflow-x: auto; }
-  .dash-table { width: 100%; text-align: left; border-collapse: collapse; }
+  .dash-table-wrap {
+     overflow-x: auto; 
+    }
+  .dash-table {
+     width: 100%; 
+     text-align: left; 
+     border-collapse: collapse; 
+    }
   
   .dash-table th {
     padding: 1rem 1.5rem;

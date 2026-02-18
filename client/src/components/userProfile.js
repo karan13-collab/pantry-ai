@@ -13,7 +13,6 @@ import {
   ShieldCheck,
   Users,
   X,
-  Save,
   Clock,
   Check,
   CheckCircle,
@@ -205,7 +204,7 @@ const UserProfile = () => {
 
               <div style={{paddingTop: '0.5rem'}}>
                 <button type="submit" className="profile-btn-primary">
-                  <Save className="w-5 h-5" /> Save Changes
+                  <div className="w-5 h-5" /> Save Changes
                 </button>
               </div>
             </form>
