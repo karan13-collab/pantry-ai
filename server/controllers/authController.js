@@ -128,38 +128,73 @@ exports.login = async (req, res) => {
 
   try {
     let user = await User.findOne({
-      $or: [
-        { email: username },
-        { username: username }
-      ]
+      $or: [{ email: username }, { username: username }]
     }).populate('household');
 
     if (!user) return res.status(400).json({ msg: 'Invalid Credentials' });
-
     if (!user.isVerified) return res.status(400).json({ msg: 'Please verify your email first.' });
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ msg: 'Invalid Credentials' });
+    if (user.lockoutUntil && user.lockoutUntil > Date.now()) {
+      const remainingMs = user.lockoutUntil - Date.now();
+      const remainingMinutes = Math.ceil(remainingMs / (60 * 1000));
+      return res.status(429).json({ 
+        msg: `Too many failed attempts. Account locked. Try again in ${remainingMinutes} minute(s).` 
+      });
+    }
 
-    const payload = { 
-        user: { 
-            id: user.id, 
-            household: user.household?._id, 
-            joinCode: user.household?.joinCode 
-        } 
-    };
-    
-    jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' }, (err, token) => {
-        if (err) throw err;
-        res.json({ token });
-    });
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (isMatch) {
+      user.loginAttempts = 0;
+      user.lockoutUntil = undefined;
+      await user.save();
+
+      const payload = { 
+          user: { 
+              id: user.id, 
+              household: user.household?._id, 
+              joinCode: user.household?.joinCode 
+          } 
+      };
+      
+      jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' }, (err, token) => {
+          if (err) throw err;
+          res.json({ token });
+      });
+
+    } else {
+      user.loginAttempts += 1;
+      let lockoutDuration = 0;
+
+      if (user.loginAttempts === 4) {
+        lockoutDuration = 1 * 60 * 1000; 
+      } else if (user.loginAttempts === 6) {
+        lockoutDuration = 5 * 60 * 1000; 
+      } else if (user.loginAttempts >= 8) {
+        lockoutDuration = 15 * 60 * 1000; 
+      }
+
+      if (lockoutDuration > 0) {
+        user.lockoutUntil = Date.now() + lockoutDuration;
+      }
+
+      await user.save();
+
+      const attemptsLeft = user.loginAttempts < 4 ? 4 - user.loginAttempts : 0;
+      
+      return res.status(400).json({ 
+        msg: lockoutDuration > 0 
+          ? `Account locked due to multiple failures.` 
+          : `Invalid Credentials. ${attemptsLeft} attempts remaining before lockout.`,
+        loginAttempts: user.loginAttempts
+      });
+    }
 
   } catch (err) { 
     console.error(err);
     res.status(500).send('Server Error'); 
   }
 };
-
 exports.forgotPassword = async (req, res) => {
   const { email } = req.body;
   try {
