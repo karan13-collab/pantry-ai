@@ -20,6 +20,7 @@ exports.register = async (req, res) => {
     workoutDays, allergies, dietaryPreferences,
     householdAction, joinCode, householdName 
   } = req.body;
+  
 
   try {
     let user = await User.findOne({ email });
@@ -32,6 +33,7 @@ exports.register = async (req, res) => {
       await User.deleteOne({ email }); 
     }
 
+    
     const newUserId = new mongoose.Types.ObjectId();
     let finalHouseholdId = null;
 
@@ -133,12 +135,11 @@ exports.login = async (req, res) => {
 
     if (!user) return res.status(400).json({ msg: 'Invalid Credentials' });
     if (!user.isVerified) return res.status(400).json({ msg: 'Please verify your email first.' });
-
     if (user.lockoutUntil && user.lockoutUntil > Date.now()) {
       const remainingMs = user.lockoutUntil - Date.now();
       const remainingMinutes = Math.ceil(remainingMs / (60 * 1000));
       return res.status(429).json({ 
-        msg: `Too many failed attempts. Account locked. Try again in ${remainingMinutes} minute(s).` 
+        msg: `Too many failed attempts. Account locked. Try again in ${remainingMinutes} minute.` 
       });
     }
 
