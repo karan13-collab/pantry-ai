@@ -21,6 +21,13 @@ exports.register = async (req, res) => {
     householdAction, joinCode, householdName 
   } = req.body;
   
+  if (!password || password.length < 8) {
+    return res.status(400).json({ msg: 'Password must be at least 8 characters long.' });
+  }
+  const specialCharRegex = /[!@#$%^&*(),.?":{}|<>]/;
+  if (!specialCharRegex.test(password)) {
+    return res.status(400).json({ msg: 'Password must contain at least one special character.' });
+  }
 
   try {
     let user = await User.findOne({ email });
@@ -218,6 +225,14 @@ exports.forgotPassword = async (req, res) => {
 
 exports.resetPassword = async (req, res) => {
   const { email, otp, newPassword } = req.body;
+
+  if (!newPassword || newPassword.length < 8) {
+    return res.status(400).json({ msg: 'New password must be at least 8 characters long.' });
+  }
+  const specialCharRegex = /[!@#$%^&*(),.?":{}|<>]/;
+  if (!specialCharRegex.test(newPassword)) {
+    return res.status(400).json({ msg: 'New password must contain at least one special character.' });
+  }
   try {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ msg: "User not found" });
