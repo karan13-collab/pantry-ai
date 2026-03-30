@@ -20,12 +20,10 @@ function App() {
         <div className="min-h-screen bg-gray-50 text-gray-800 font-sans">
           <Routes>
             
-            {/* PUBLIC ROUTES (Anyone can see these) */}
             <Route path="/" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
 
-            {/* PROTECTED ROUTES (Must be logged in) */}
             <Route 
               path="/dashboard" 
               element={
@@ -52,8 +50,6 @@ function App() {
                 </PrivateRoute>
               } 
             />
-
-            {/* Catch-all: If user types a random URL, send to Login */}
             <Route path="*" element={<Navigate to="/" />} />
 
           </Routes>

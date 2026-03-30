@@ -9,10 +9,8 @@ const {
   generateRecipe 
 } = require('../controllers/inventoryController');
 
-// Debug check (Optional: Prints to terminal if something is still wrong)
-if (!getInventory) console.error("❌ Critical Error: getInventory is undefined in routes!");
+if (!getInventory) console.error(" Critical Error: getInventory is undefined in routes!");
 
-// Routes
 router.get('/', auth, getInventory);
 router.post('/', auth, addItem);
 router.delete('/:id', auth, deleteItem);

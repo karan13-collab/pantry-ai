@@ -13,17 +13,15 @@ import {
   ShieldCheck,
   Users,
   X,
-  Save,
   Clock,
   Check,
   CheckCircle,
   XCircle,
 } from "lucide-react";
 import api from "../services/api";
-import "./userProfile.css"; // Ensure path is correct
+import "./userProfile.css"; 
 
 const UserProfile = () => {
-  // --- 1. LOCAL NOTIFICATION STATE ---
   const [toast, setToast] = useState(null);
 
   const showToast = (msg, type = "success") => {
@@ -31,7 +29,6 @@ const UserProfile = () => {
     setTimeout(() => setToast(null), 3000);
   };
 
-  // --- 2. DATA STATE ---
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -42,7 +39,6 @@ const UserProfile = () => {
   const [isRenamingHousehold, setIsRenamingHousehold] = useState(false);
   const [newHouseholdName, setNewHouseholdName] = useState("");
 
-  // --- 3. FETCH DATA ---
   const fetchProfile = async () => {
     try {
       const res = await api.get("/user/profile");
@@ -75,7 +71,6 @@ const UserProfile = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // --- 4. SAVE PROFILE ---
   const handleSaveProfile = async (e) => {
     e.preventDefault();
     try {
@@ -98,7 +93,6 @@ const UserProfile = () => {
     }
   };
 
-  // --- 5. RENAME HOUSEHOLD ---
   const handleSaveHouseholdName = async () => {
     try {
       if (!newHouseholdName.trim()) return;
@@ -143,7 +137,6 @@ const UserProfile = () => {
   return (
     <div className="profile-container">
       
-      {/* 🔴 PORTAL NOTIFICATION */}
       {toast &&
         createPortal(
           <div className={`profile-toast ${toast.type === 'error' ? 'toast-error' : 'toast-success'}`}>
@@ -158,7 +151,6 @@ const UserProfile = () => {
           document.body 
         )}
 
-      {/* EDIT MODAL */}
       {isEditing && (
         <div className="profile-modal-overlay">
           <div className="profile-modal-content">
@@ -212,7 +204,7 @@ const UserProfile = () => {
 
               <div style={{paddingTop: '0.5rem'}}>
                 <button type="submit" className="profile-btn-primary">
-                  <Save className="w-5 h-5" /> Save Changes
+                  <div className="w-5 h-5" /> Save Changes
                 </button>
               </div>
             </form>
@@ -220,7 +212,6 @@ const UserProfile = () => {
         </div>
       )}
 
-      {/* PROFILE HEADER */}
       <div className="profile-header">
         <div className="header-accent"></div>
         
@@ -243,7 +234,6 @@ const UserProfile = () => {
         </button>
       </div>
 
-      {/* STATS */}
       <div className="profile-stats-grid">
         <StatCard variant="purple" icon={<Calendar className="w-5 h-5 stat-icon" />} label="Age" value={`${user.age} yrs`} />
         <StatCard variant="blue" icon={<Ruler className="w-5 h-5 stat-icon" />} label="Height" value={`${user.height} cm`} />
@@ -251,7 +241,6 @@ const UserProfile = () => {
         <StatCard variant="pink" icon={<Activity className="w-5 h-5 stat-icon" />} label="Activity" value={user.activityLevel} />
       </div>
 
-      {/* HOUSEHOLD */}
       <div className="profile-card">
         <div className="household-header">
           <div className="household-title-group">
@@ -318,7 +307,6 @@ const UserProfile = () => {
         )}
       </div>
 
-      {/* DETAILS */}
       <div className="details-grid">
         <div className="profile-card">
           <h3 className="card-title">
@@ -371,7 +359,6 @@ const UserProfile = () => {
   );
 };
 
-// Clean StatCard with CSS variants
 const StatCard = ({ icon, label, value, variant }) => (
   <div className={`stat-card stat-${variant}`}>
     <div className="stat-icon-wrapper">{icon}</div>

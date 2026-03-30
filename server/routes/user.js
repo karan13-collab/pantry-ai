@@ -1,15 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/User'); // Import your schema
-// NEW (Correct)
-const verifyToken = require('../middleware/authMiddleware'); // Your JWT middleware
+const User = require('../models/User'); 
+const verifyToken = require('../middleware/authMiddleware'); 
 
-// GET /api/user/profile
-// This gets the data for the "My Data" tab
-// GET /api/user/profile
+
 router.get('/profile', verifyToken, async (req, res) => {
     try {
-      // 1. Get current user
       const user = await User.findById(req.user.id)
       .select('-password')
       .populate('household', 'name joinCode');
@@ -18,16 +14,14 @@ router.get('/profile', verifyToken, async (req, res) => {
         return res.status(404).json({ msg: 'User not found' });
       }
   
-      // 2. Find OTHER users in the same household (if user has one)
       let householdMembers = [];
       if (user.household) {
         householdMembers = await User.find({ household: user.household })
-          .select('username email') // Only get name and email
-          .lean(); // Converts to plain JS object
+          .select('username email')
+          .lean(); 
       }
   
-      // 3. Send combined data
-      // We mix the user object with the new 'members' list
+     
       res.json({ ...user.toObject(), members: householdMembers });
       
     } catch (err) {
@@ -36,11 +30,9 @@ router.get('/profile', verifyToken, async (req, res) => {
     }
   });
 
-  // PUT /api/user/profile - Update user stats
 router.put('/profile', verifyToken, async (req, res) => {
     const { weight, height, age, activityLevel, dietaryPreferences, allergies } = req.body;
   
-    // Build the object to update
     const userFields = {};
     if (weight) userFields.weight = weight;
     if (height) userFields.height = height;
@@ -50,11 +42,11 @@ router.put('/profile', verifyToken, async (req, res) => {
     if (allergies) userFields.allergies = allergies;
   
     try {
-      // Find user by ID (from the token) and update
+     
       let user = await User.findByIdAndUpdate(
         req.user.id,
         { $set: userFields },
-        { new: true } // Returns the updated document
+        { new: true } 
       ).select('-password');
   
       res.json(user);

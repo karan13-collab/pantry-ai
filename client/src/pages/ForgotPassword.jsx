@@ -47,13 +47,11 @@ const ForgotPassword = () => {
 
   return (
     <div className="fp-container">
-      {/* Background FX */}
       <div className="fp-bg-gradient"></div>
       <div className="fp-bg-texture"></div>
 
       <div className="fp-card">
         
-        {/* Header */}
         <div className="fp-header">
           <div className="fp-icon-wrapper">
              {step === 1 ? <Key className="text-emerald-400" size={32} /> : <Lock className="text-emerald-400" size={32} />}
@@ -64,7 +62,6 @@ const ForgotPassword = () => {
           </p>
         </div>
 
-        {/* Unified Alert Component */}
         {message.text && (
           <div className={`fp-alert ${message.type === 'error' ? 'fp-alert-error' : 'fp-alert-success'}`}>
             {message.type === 'error' ? <AlertTriangle size={16}/> : <CheckCircle size={16}/>} 
@@ -72,7 +69,6 @@ const ForgotPassword = () => {
           </div>
         )}
 
-        {/* --- STEP 1 FORM --- */}
         {step === 1 && (
           <form onSubmit={handleRequestOtp}>
             <div className="mb-6">
@@ -97,7 +93,6 @@ const ForgotPassword = () => {
           </form>
         )}
 
-        {/* --- STEP 2 FORM --- */}
         {step === 2 && (
           <form onSubmit={handleResetPassword}>
              <div className="mb-6">

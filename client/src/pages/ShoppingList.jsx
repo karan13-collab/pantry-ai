@@ -149,19 +149,16 @@ const ShoppingList = () => {
     );
   };
 
-  // --- MAIN RENDER ---
   if (loading) return <div className="sl-page justify-center items-center"><Loader className="animate-spin text-emerald-500 w-12 h-12" /></div>;
 
   return (
     <div className="sl-page">
-      {/* Backgrounds */}
       <div className="sl-bg-layer sl-bg-image"></div>
       <div className="sl-bg-layer sl-bg-gradient"></div>
 
       <Navbar />
 
       <main className="sl-main">
-        {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <div className="p-3 bg-emerald-500/20 rounded-2xl border border-emerald-500/20">
             <ShoppingCart className="w-8 h-8 text-emerald-400" />
@@ -185,13 +182,11 @@ const ShoppingList = () => {
             {lists.map(list => (
               <div key={list._id} className="sl-card animate-fade-in-up">
                 
-                {/* List Header */}
                 <div className="sl-card-header">
                   <h3 className="text-xl font-bold text-white">{list.name}</h3>
                   <span className="sl-badge">{list.items.length} Items</span>
                 </div>
 
-                {/* Add Item Row */}
                 <div className="sl-input-row">
                   <input type="text" placeholder="Add custom item..." className="sl-input flex-[2] min-w-[140px]"
                     value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
@@ -219,7 +214,6 @@ const ShoppingList = () => {
                   </div>
                 </div>
 
-                {/* List Items */}
                 <div className="divide-y divide-gray-800">
                   {list.items.map(item => (
                     <div key={item._id} className="sl-item-row group">

@@ -181,7 +181,7 @@ const Dashboard = () => {
     const today = new Date();
     const expiry = new Date(dateString);
     const diffDays = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
-    if (diffDays < 0) return { className: "dash-status status-danger", text: "Expired" };
+    if (diffDays <= 0) return { className: "dash-status status-danger", text: "Expired" };
     if (diffDays <= 3) return { className: "dash-status status-warn", text: "Expiring Soon" };
     return { className: "dash-status status-fresh", text: "Fresh" };
   };

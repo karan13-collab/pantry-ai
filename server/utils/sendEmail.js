@@ -1,5 +1,4 @@
 const nodemailer = require('nodemailer');
-
 const sendEmail = async (email, otp, subject = 'Verification Code', title = 'PantryAI') => {
   try {
     const transporter = nodemailer.createTransport({
