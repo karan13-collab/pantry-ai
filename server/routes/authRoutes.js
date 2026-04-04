@@ -7,9 +7,11 @@ const {
   verifyEmail, 
   login, 
   forgotPassword, 
-  resetPassword 
+  resetPassword,
+  logout,
+  getUser
 } = require('../controllers/authController');
-
+const authMiddleware = require('../middleware/authMiddleware');
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, 
   max: 10, 
@@ -27,5 +29,7 @@ router.post('/login', loginLimiter, login);
 
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password', resetPassword);
+router.post('/logout', logout);
+router.get('/user', authMiddleware,getUser);
 
 module.exports = router;

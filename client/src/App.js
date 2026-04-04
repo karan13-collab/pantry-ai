@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useContext } from 'react'; // 👈 Added useContext here
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, AuthContext } from './context/AuthContext'; // 👈 Import AuthContext
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
@@ -9,8 +9,20 @@ import ShoppingList from './pages/ShoppingList';
 import ForgotPassword from './pages/ForgotPassword';
 
 const PrivateRoute = ({ children }) => {
-  const token = localStorage.getItem('token');
-  return token ? children : <Navigate to="/" />;
+  // 👇 SECURITY UPGRADE: Read from the secure Context instead of localStorage 👇
+  const { user, loading } = useContext(AuthContext);
+
+  // Give the browser a fraction of a second to check the HttpOnly cookie
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-900 text-emerald-400">
+        Authenticating Secure Session...
+      </div>
+    );
+  }
+
+  // Once loading is done, if we have a user, let them in. Otherwise, kick to login.
+  return user ? children : <Navigate to="/" />;
 };
 
 function App() {

@@ -167,7 +167,15 @@ const Dashboard = () => {
       setListModalOpen(false);
     } catch (err) { showNotification("Failed to create list", "error"); } finally { setAddingToList(false); }
   };
-  const handleLogout = () => { localStorage.removeItem("token"); navigate("/"); };
+  const handleLogout = async () => { 
+  try {
+    await api.post("/auth/logout"); 
+  } catch (err) {
+    console.error("Logout failed", err);
+  }
+  localStorage.removeItem("token");
+  navigate("/"); 
+};
   const copyToClipboard = () => {
     if (household?.joinCode) {
       navigator.clipboard.writeText(household.joinCode);

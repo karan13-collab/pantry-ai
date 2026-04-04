@@ -92,11 +92,10 @@ const Register = () => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const res = await api.post("/auth/verify-email", {
+      await api.post("/auth/verify-email", {
         email: formData.email,
         otp,
       });
-      localStorage.setItem("token", res.data.token);
       navigate("/dashboard");
       window.location.reload();
     } catch (err) {

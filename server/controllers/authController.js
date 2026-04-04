@@ -1,11 +1,16 @@
+const logSecurityEvent = require('../utils/auditLogger');
 const User = require('../models/User');
 const Household = require('../models/Household');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
-const sendEmail = require('../utils/sendEmail'); 
+const sendEmail = require('../utils/sendEmail');
+const crypto = require('crypto');
 
-const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
+
+const generateOTP = () => {
+  return crypto.randomInt(100000, 1000000).toString();
+};
 
 const calculateActivityLevel = (days) => {
   if (days >= 6) return 'active';
@@ -39,7 +44,6 @@ exports.register = async (req, res) => {
     if (user && !user.isVerified) {
       await User.deleteOne({ email }); 
     }
-
     
     const newUserId = new mongoose.Types.ObjectId();
     let finalHouseholdId = null;
@@ -61,7 +65,8 @@ exports.register = async (req, res) => {
        finalHouseholdId = newHousehold._id;
     }
 
-    const otp = generateOTP();
+    const rawOtp = generateOTP();
+    const hashedOtp = crypto.createHash('sha256').update(rawOtp).digest('hex');
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000); 
 
     user = new User({
@@ -74,7 +79,7 @@ exports.register = async (req, res) => {
       household: finalHouseholdId,
       role: 'member',
       isVerified: false,
-      otp, 
+      otp: hashedOtp,
       otpExpires
     });
 
@@ -82,7 +87,7 @@ exports.register = async (req, res) => {
     user.password = await bcrypt.hash(password, salt);
     await user.save();
 
-    await sendEmail(email, otp);
+    await sendEmail(email, rawOtp);
 
     res.json({ msg: 'OTP Sent', email: email });
 
@@ -93,7 +98,7 @@ exports.register = async (req, res) => {
 };
 
 exports.verifyEmail = async (req, res) => {
-  const { email, otp } = req.body;
+  const { email, otp } = req.body; 
 
   try {
     const user = await User.findOne({ email });
@@ -101,7 +106,9 @@ exports.verifyEmail = async (req, res) => {
     if (!user) return res.status(400).json({ msg: 'User not found' });
     if (user.isVerified) return res.status(400).json({ msg: 'User already verified' });
 
-    if (user.otp !== otp) {
+    const hashedInputOtp = crypto.createHash('sha256').update(otp).digest('hex');
+
+    if (user.otp !== hashedInputOtp) {
       return res.status(400).json({ msg: 'Invalid OTP' });
     }
     if (user.otpExpires < Date.now()) {
@@ -123,7 +130,21 @@ exports.verifyEmail = async (req, res) => {
 
     jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' }, (err, token) => {
       if (err) throw err;
-      res.json({ token });
+      
+      res.cookie('jwt_token', token, {
+        httpOnly: true, 
+        secure: process.env.NODE_ENV === 'production', 
+        sameSite: 'lax', 
+        maxAge: 60 * 60 * 1000 
+      });
+
+      res.status(200).json({ 
+        msg: 'Email verified successfully! Logging you in...',
+        user: {
+          id: user.id,
+          email: user.email
+        }
+      });
     });
 
   } catch (err) {
@@ -157,6 +178,8 @@ exports.login = async (req, res) => {
       user.lockoutUntil = undefined;
       await user.save();
 
+      await logSecurityEvent(req, user.email, 'LOGIN_SUCCESS', 'SUCCESS');
+
       const payload = { 
           user: { 
               id: user.id, 
@@ -167,7 +190,22 @@ exports.login = async (req, res) => {
       
       jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' }, (err, token) => {
           if (err) throw err;
-          res.json({ token });
+          
+          res.cookie('jwt_token', token, {
+            httpOnly: true, 
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            maxAge: 60 * 60 * 1000
+          });
+
+          res.status(200).json({ 
+            msg: 'Login successful',
+            user: { 
+              id: user.id,
+              username: user.username,
+              household: user.household?._id
+            }
+          });
       });
 
     } else {
@@ -184,16 +222,23 @@ exports.login = async (req, res) => {
 
       if (lockoutDuration > 0) {
         user.lockoutUntil = Date.now() + lockoutDuration;
+        await user.save();
+
+        await logSecurityEvent(req, user.email, 'ACCOUNT_LOCKED', 'WARNING');
+
+        return res.status(429).json({ 
+          msg: `Account locked due to multiple failures.` 
+        });
       }
 
       await user.save();
 
-      const attemptsLeft = user.loginAttempts < 4 ? 4 - user.loginAttempts : 0;
+      await logSecurityEvent(req, user.email, 'LOGIN_FAILURE', 'FAILURE');
+
+      const attemptsLeft = 4 - user.loginAttempts;
       
       return res.status(400).json({ 
-        msg: lockoutDuration > 0 
-          ? `Account locked due to multiple failures.` 
-          : `Invalid Credentials. ${attemptsLeft} attempts remaining before lockout.`,
+        msg: `Invalid Credentials. ${attemptsLeft > 0 ? attemptsLeft : 0} attempts remaining before lockout.`,
         loginAttempts: user.loginAttempts
       });
     }
@@ -203,18 +248,21 @@ exports.login = async (req, res) => {
     res.status(500).send('Server Error'); 
   }
 };
+
 exports.forgotPassword = async (req, res) => {
   const { email } = req.body;
   try {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ msg: "User not found" });
 
-    const otp = generateOTP();
-    user.otp = otp;
+    const rawOtp = generateOTP();
+    const hashedOtp = crypto.createHash('sha256').update(rawOtp).digest('hex');
+
+    user.otp = hashedOtp;
     user.otpExpires = Date.now() + 10 * 60 * 1000;
     await user.save();
 
-    await sendEmail(email, otp, "Reset Your Password", "Password Reset Request");
+    await sendEmail(email, rawOtp, "Reset Your Password", "Password Reset Request");
 
     res.json({ msg: "Reset code sent to email" });
   } catch (err) {
@@ -237,7 +285,9 @@ exports.resetPassword = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ msg: "User not found" });
 
-    if (user.otp !== otp) return res.status(400).json({ msg: "Invalid Code" });
+    const hashedInputOtp = crypto.createHash('sha256').update(otp).digest('hex');
+
+    if (user.otp !== hashedInputOtp) return res.status(400).json({ msg: "Invalid Code" });
     if (user.otpExpires < Date.now()) return res.status(400).json({ msg: "Code Expired" });
 
     const salt = await bcrypt.genSalt(10);
@@ -247,9 +297,35 @@ exports.resetPassword = async (req, res) => {
     user.otpExpires = undefined;
     await user.save();
 
+    // 👇 EXPLICIT SECURITY: Log Password Reset 👇
+    await logSecurityEvent(req, user.email, 'PASSWORD_RESET', 'SUCCESS');
+
     res.json({ msg: "Password updated successfully" });
   } catch (err) {
     console.error(err);
     res.status(500).send("Server Error");
+  }
+};
+
+exports.logout = (req, res) => {
+  res.cookie('jwt_token', '', {
+    httpOnly: true,
+    expires: new Date(0) 
+  });
+  res.status(200).json({ msg: 'Successfully logged out' });
+};
+
+exports.getUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password').populate('household');
+    
+    if (!user) {
+      return res.status(404).json({ msg: 'User not found' });
+    }
+    
+    res.json(user);
+  } catch (err) {
+    console.error("Get User Error:", err.message);
+    res.status(500).send('Server Error');
   }
 };
